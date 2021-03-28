@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dungeon Viewer</title>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+  <div class="content">
+    <h1>Dungeon Viewer for Rance VI / GALZOO Island</h1>
+    <div class="usage">
+        <p>Drag and drop</p>
+        <ul>
+            <li><code>Data\DungeonData.dlf</code> of Rance VI, or</li>
+            <li>all files in the <code>Data</code> folder of GALZOO Island</li>
+        </ul>
+        <p>to this page.</p>
+    </div>
+    <div>
+        <input type="file" id="fileselect" multiple/>
+        <select id="dungeon-id" hidden></select>
+    </div>
+    <script type="module" src="index.js"></script>
+  </div>
+</body>
+</html>
