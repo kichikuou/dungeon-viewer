@@ -1,0 +1,22 @@
+body {
+    min-height: 100vh;
+}
+#viewer {
+    float: left;
+}
+table.cell-info {
+    float: left;
+    margin: 0 8px;
+    font-size: smaller;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+.cell-info tr:nth-child(odd){
+    background-color: #f3f3f3
+}
+td {
+    padding: 1px 4px;
+}
+.attr-value {
+    text-align: right;
+}

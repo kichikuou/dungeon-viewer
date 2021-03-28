@@ -1,74 +1,80 @@
 import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
 import { TextureType } from './dtex.js';
+const planeGeometry = new THREE.PlaneGeometry(1, 1);
 export class DungeonModel extends THREE.Group {
     constructor(dgn, dtx, lib) {
         super();
-        this.dtx = dtx;
-        this.lib = lib;
-        this.resources = [];
-        this.materials = [];
-        this.planeGeometry = this.track(new THREE.PlaneGeometry(1, 1));
-        let i = 0;
+        this.materials = new MaterialCache(dtx, lib);
         for (let z = 0; z < dgn.sizeZ; z++) {
             for (let y = 0; y < dgn.sizeY; y++) {
                 for (let x = 0; x < dgn.sizeX; x++) {
                     const cell = dgn.cellAt(x, y, dgn.sizeZ - 1 - z);
-                    this.addCell(x, y, z, cell);
+                    this.add(new CellModel(x, y, z, cell, this.materials));
                 }
             }
         }
     }
-    addCell(x, y, z, cell) {
+    dispose() {
+        this.materials.dispose();
+    }
+}
+export class CellModel extends THREE.Group {
+    constructor(x, y, z, cell, materials) {
+        super();
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.cell = cell;
         if (cell.floor_texture >= 0) {
-            const plane = this.addPlane(TextureType.Ceiling, cell.floor_texture);
+            const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.floor_texture));
             plane.rotation.x = Math.PI / -2;
             plane.position.set(x + 0.5, y, z + 0.5);
         }
         if (cell.ceiling_texture >= 0) {
-            const plane = this.addPlane(TextureType.Floor, cell.ceiling_texture);
+            const plane = this.addPlane(materials.get(TextureType.Floor, cell.ceiling_texture));
             plane.rotation.x = Math.PI / 2;
             plane.position.set(x + 0.5, y + 1.0, z + 0.5);
         }
         if (cell.north_texture >= 0) {
-            const plane = this.addPlane(TextureType.Wall, cell.north_texture);
+            const plane = this.addPlane(materials.get(TextureType.Wall, cell.north_texture));
             plane.position.set(x + 0.5, y + 0.5, z);
         }
         if (cell.south_texture >= 0) {
-            const plane = this.addPlane(TextureType.Wall, cell.south_texture);
+            const plane = this.addPlane(materials.get(TextureType.Wall, cell.south_texture));
             plane.rotation.y = Math.PI;
             plane.position.set(x + 0.5, y + 0.5, z + 1.0);
         }
         if (cell.east_texture >= 0) {
-            const plane = this.addPlane(TextureType.Wall, cell.east_texture);
+            const plane = this.addPlane(materials.get(TextureType.Wall, cell.east_texture));
             plane.rotation.y = Math.PI / -2;
             plane.position.set(x + 1.0, y + 0.5, z + 0.5);
         }
         if (cell.west_texture >= 0) {
-            const plane = this.addPlane(TextureType.Wall, cell.west_texture);
+            const plane = this.addPlane(materials.get(TextureType.Wall, cell.west_texture));
             plane.rotation.y = Math.PI / 2;
             plane.position.set(x, y + 0.5, z + 0.5);
         }
         if (cell.north_door >= 0) {
-            const plane = this.addPlane(TextureType.Door, cell.north_door);
+            const plane = this.addPlane(materials.get(TextureType.Door, cell.north_door));
             plane.position.set(x + 0.5, y + 0.5, z);
         }
         if (cell.south_door >= 0) {
-            const plane = this.addPlane(TextureType.Door, cell.south_door);
+            const plane = this.addPlane(materials.get(TextureType.Door, cell.south_door));
             plane.rotation.y = Math.PI;
             plane.position.set(x + 0.5, y + 0.5, z + 1.0);
         }
         if (cell.east_door >= 0) {
-            const plane = this.addPlane(TextureType.Door, cell.east_door);
+            const plane = this.addPlane(materials.get(TextureType.Door, cell.east_door));
             plane.rotation.y = Math.PI / -2;
             plane.position.set(x + 1.0, y + 0.5, z + 0.5);
         }
         if (cell.west_door >= 0) {
-            const plane = this.addPlane(TextureType.Door, cell.west_door);
+            const plane = this.addPlane(materials.get(TextureType.Door, cell.west_door));
             plane.rotation.y = Math.PI / 2;
             plane.position.set(x, y + 0.5, z + 0.5);
         }
         if (cell.stairs_texture >= 0) {
-            const plane = this.addPlane(TextureType.Stairs, cell.stairs_texture);
+            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.stairs_texture));
             plane.scale.y = Math.sqrt(2);
             plane.position.set(x + 0.5, y + 0.5, z + 0.5);
             plane.rotation.x = Math.PI / -4;
@@ -76,13 +82,20 @@ export class DungeonModel extends THREE.Group {
             plane.rotation.order = "ZYX";
         }
     }
-    addPlane(type, textureIndex) {
-        const material = this.getMaterial(type, textureIndex);
-        const plane = new THREE.Mesh(this.planeGeometry, material);
+    addPlane(material) {
+        const plane = new THREE.Mesh(planeGeometry, material);
         this.add(plane);
         return plane;
     }
-    getMaterial(type, index) {
+}
+class MaterialCache {
+    constructor(dtx, lib) {
+        this.dtx = dtx;
+        this.lib = lib;
+        this.resources = [];
+        this.materials = [];
+    }
+    get(type, index) {
         if (!this.materials[type])
             this.materials[type] = [];
         if (!this.materials[type][index]) {

@@ -94,16 +94,20 @@ export class Cell {
         }
     }
 
-    get floor_texture(): number { return this.v.getInt32(0, true); }
-    get ceiling_texture(): number { return this.v.getInt32(4, true); }
-    get north_texture(): number { return this.v.getInt32(8, true); }
-    get south_texture(): number { return this.v.getInt32(12, true); }
-    get east_texture(): number { return this.v.getInt32(16, true); }
-    get west_texture(): number { return this.v.getInt32(20, true); }
-    get north_door(): number { return this.v.getInt32(24, true); }
-    get south_door(): number { return this.v.getInt32(28, true); }
-    get east_door(): number { return this.v.getInt32(32, true); }
-    get west_door(): number { return this.v.getInt32(36, true); }
-    get stairs_texture(): number { return this.v.getInt32(40, true); }
-    get stairs_orientation(): number { return this.v.getInt32(44, true); }
+    getAttr(n: number): number {
+        return this.v.getInt32(n * 4, true);
+    }
+
+    get floor_texture(): number { return this.getAttr(0); }
+    get ceiling_texture(): number { return this.getAttr(1); }
+    get north_texture(): number { return this.getAttr(2); }
+    get south_texture(): number { return this.getAttr(3); }
+    get east_texture(): number { return this.getAttr(4); }
+    get west_texture(): number { return this.getAttr(5); }
+    get north_door(): number { return this.getAttr(6); }
+    get south_door(): number { return this.getAttr(7); }
+    get east_door(): number { return this.getAttr(8); }
+    get west_door(): number { return this.getAttr(9); }
+    get stairs_texture(): number { return this.getAttr(10); }
+    get stairs_orientation(): number { return this.getAttr(11); }
 }

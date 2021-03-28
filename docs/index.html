@@ -2,18 +2,9 @@
 <html>
 <head>
     <title>Dungeon Viewer</title>
-    <style>
-        body {
-            min-height: 100vh;
-        }
-        .content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="content">
     <h1>Dungeon Viewer for Rance VI / GALZOO Island</h1>
     <div class="usage">
         <p>Drag and drop</p>
@@ -27,7 +18,45 @@
         <input type="file" id="fileselect" multiple/>
         <select id="dungeon-id" hidden></select>
     </div>
+    <div id="viewer"></div>
+    <table class="cell-info" hidden>
+        <tr><th id="cell-coords" colspan=2></th></tr>
+        <tr><td>floor_texture</td><td class="attr-value" id="cell-attr0"></td></tr>
+        <tr><td>ceiling_texture</td><td class="attr-value" id="cell-attr1"></td></tr>
+        <tr><td>north_texture</td><td class="attr-value" id="cell-attr2"></td></tr>
+        <tr><td>south_texture</td><td class="attr-value" id="cell-attr3"></td></tr>
+        <tr><td>east_texture</td><td class="attr-value" id="cell-attr4"></td></tr>
+        <tr><td>west_texture</td><td class="attr-value" id="cell-attr5"></td></tr>
+        <tr><td>north_door</td><td class="attr-value" id="cell-attr6"></td></tr>
+        <tr><td>south_door</td><td class="attr-value" id="cell-attr7"></td></tr>
+        <tr><td>east_door</td><td class="attr-value" id="cell-attr8"></td></tr>
+        <tr><td>west_door</td><td class="attr-value" id="cell-attr9"></td></tr>
+        <tr><td>stairs_texture</td><td class="attr-value" id="cell-attr10"></td></tr>
+        <tr><td>stairs_orientation</td><td class="attr-value" id="cell-attr11"></td></tr>
+        <tr><td>attr12</td><td class="attr-value" id="cell-attr12"></td></tr>
+        <tr><td>attr13</td><td class="attr-value" id="cell-attr13"></td></tr>
+        <tr><td>attr14</td><td class="attr-value" id="cell-attr14"></td></tr>
+        <tr><td>attr15</td><td class="attr-value" id="cell-attr15"></td></tr>
+        <tr><td>attr16</td><td class="attr-value" id="cell-attr16"></td></tr>
+        <tr><td>attr17</td><td class="attr-value" id="cell-attr17"></td></tr>
+        <tr><td>attr18</td><td class="attr-value" id="cell-attr18"></td></tr>
+        <tr><td>attr19</td><td class="attr-value" id="cell-attr19"></td></tr>
+        <tr><td>attr20</td><td class="attr-value" id="cell-attr20"></td></tr>
+        <tr><td>attr21</td><td class="attr-value" id="cell-attr21"></td></tr>
+        <tr><td>attr22</td><td class="attr-value" id="cell-attr22"></td></tr>
+        <tr><td>attr23</td><td class="attr-value" id="cell-attr23"></td></tr>
+        <tr><td>attr24</td><td class="attr-value" id="cell-attr24"></td></tr>
+        <tr><td>attr25</td><td class="attr-value" id="cell-attr25"></td></tr>
+        <tr><td>attr26</td><td class="attr-value" id="cell-attr26"></td></tr>
+        <tr><td>attr27</td><td class="attr-value" id="cell-attr27"></td></tr>
+        <tr><td>attr28</td><td class="attr-value" id="cell-attr28"></td></tr>
+        <tr><td>attr29</td><td class="attr-value" id="cell-attr29"></td></tr>
+        <tr><td>attr30</td><td class="attr-value" id="cell-attr30"></td></tr>
+        <tr><td>attr31</td><td class="attr-value" id="cell-attr31"></td></tr>
+        <tr><td>attr32</td><td class="attr-value" id="cell-attr32"></td></tr>
+        <tr><td>attr33</td><td class="attr-value" id="cell-attr33"></td></tr>
+        <tr><td>attr34</td><td class="attr-value" id="cell-attr34"></td></tr>
+    </table>
     <script type="module" src="index.js"></script>
-  </div>
 </body>
 </html>
