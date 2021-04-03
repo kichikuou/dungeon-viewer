@@ -66,7 +66,13 @@ class DungeonViewer {
         this.scene.add(this.selectionMarker);
         this.selectionMarker.position.set(obj.x + 0.5, obj.y + 0.5, obj.z + 0.5);
         const cell = obj.cell;
-        $('#cell-coords').innerText = `(${obj.x + 1}, ${obj.z + 1}, ${obj.y + 1})`;
+        // Scenario coordinates: Used in scenario files (before being transformed
+        // by CDungeon::TransMapPos()). X increases from west to east, Y increases
+        // from north to south, Z increases from down to up.
+        $('#scenario-coords').innerText = `(${obj.x + 1}, ${obj.z + 1}, ${obj.y + 1})`;
+        // Dungeon coordinates: Used in DrawDungeon.DLL. X increases from west
+        // to east, Y increases from down to up, Z increases from south to north.
+        $('#dungeon-coords').innerText = `(${obj.x}, ${obj.y}, ${this.model.sizeZ - 1 - obj.z})`;
         for (let i = 0; i < 35; i++) {
             $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
         }

@@ -4,6 +4,9 @@ const planeGeometry = new THREE.PlaneGeometry(1, 1);
 export class DungeonModel extends THREE.Group {
     constructor(dgn, dtx, lib) {
         super();
+        this.sizeX = dgn.sizeX;
+        this.sizeY = dgn.sizeY;
+        this.sizeZ = dgn.sizeZ;
         this.materials = new MaterialCache(dtx, lib);
         for (let z = 0; z < dgn.sizeZ; z++) {
             for (let y = 0; y < dgn.sizeY; y++) {

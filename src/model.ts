@@ -13,9 +13,15 @@ const planeGeometry = new THREE.PlaneGeometry(1, 1);
 
 export class DungeonModel extends THREE.Group {
     private materials: MaterialCache;
+    public sizeX: number;
+    public sizeY: number;
+    public sizeZ: number;
 
     constructor(dgn: Dugn, dtx: Dtex, lib: LibModule) {
         super();
+        this.sizeX = dgn.sizeX;
+        this.sizeY = dgn.sizeY;
+        this.sizeZ = dgn.sizeZ;
         this.materials = new MaterialCache(dtx, lib);
         for (let z = 0; z < dgn.sizeZ; z++) {
             for (let y = 0; y < dgn.sizeY; y++) {
