@@ -102,8 +102,11 @@ export class CellModel extends THREE.Group {
             const obj = polyFactory.createModel(cell.polyobj_index);
             const scale = cell.polyobj_scale / 2;
             obj.scale.set(scale, scale, scale);
-            obj.rotation.y = cell.polyobj_rotation * Math.PI / -180;
-            obj.position.set(x + 0.5, y, z + 0.5);
+            obj.rotation.y = cell.polyobj_rotationY * Math.PI / -180;
+            const posX = x + 0.5 + cell.polyobj_positionX / 2;
+            const posY = y + cell.polyobj_positionY / 2;
+            const posZ = z + 0.5 - cell.polyobj_positionZ / 2;
+            obj.position.set(posX, posY, posZ);
             this.add(obj);
         }
     }

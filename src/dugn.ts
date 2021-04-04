@@ -36,8 +36,13 @@ struct cell {
         uint8 unknown[38];
         int32 polyobj_index;
         float polyobj_scale;
-        float polyobj_rotation;
-        uint8 unknown[40];
+        float polyobj_rotationY;
+        float polyobj_rotationZ;  // always zero
+        float polyobj_rotationX;  // always zero
+        float polyobj_positionX;
+        float polyobj_positionY;
+        float polyobj_positionZ;
+        uint8 unknown[20];
     }
 };
 */
@@ -120,7 +125,22 @@ export class Cell {
     get polyobj_scale(): number {
         return this.version === 13 ? this.v.getFloat32(182, true) : 1;
     }
-    get polyobj_rotation(): number {
+    get polyobj_rotationY(): number {
         return this.version === 13 ? this.v.getFloat32(186, true) : 0;
+    }
+    get polyobj_rotationZ(): number {
+        return this.version === 13 ? this.v.getFloat32(190, true) : 0;
+    }
+    get polyobj_rotationX(): number {
+        return this.version === 13 ? this.v.getFloat32(194, true) : 0;
+    }
+    get polyobj_positionX(): number {
+        return this.version === 13 ? this.v.getFloat32(198, true) : 0;
+    }
+    get polyobj_positionY(): number {
+        return this.version === 13 ? this.v.getFloat32(202, true) : 0;
+    }
+    get polyobj_positionZ(): number {
+        return this.version === 13 ? this.v.getFloat32(206, true) : 0;
     }
 }
