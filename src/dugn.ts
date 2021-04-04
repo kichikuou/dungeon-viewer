@@ -25,29 +25,33 @@ struct cell {
     int32 west_door;
     int32 stairs_texture;
     int32 stairs_orientation;
-    int32 unknown[23];
-    if (version == 10) {
-        struct {
-            uint32 i;
-            strz s;
-        } unknown[6];
-        uint8 unknown[8];
-    } else if (version == 13) {
-        uint8 unknown[38];
-        int32 polyobj_index;
-        float polyobj_scale;
-        float polyobj_rotationY;
-        float polyobj_rotationZ;  // always zero
-        float polyobj_rotationX;  // always zero
-        float polyobj_positionX;
-        float polyobj_positionY;
-        float polyobj_positionZ;
-        int32 roof_orientation;
-        int32 roof_texture;
-        int32 unused;  // always -1
-        int32 roof_underside_texture;
-        int32 unused;  // always -1
-    }
+    int32 unknown[18];
+    int32 floor_event;
+    int32 north_event;
+    int32 south_event;
+    int32 east_event;
+    int32 west_event;
+    struct {
+        uint32 i;
+        strz s;     // in sjis
+    } pairs[6];     // unused in GALZOO (all zero)
+    int32 unknown1;
+    int32 unknown2;
+
+    // the below exist only in version 13
+    int32 polyobj_index;
+    float polyobj_scale;
+    float polyobj_rotationY;
+    float polyobj_rotationZ;  // always zero
+    float polyobj_rotationX;  // always zero
+    float polyobj_positionX;
+    float polyobj_positionY;
+    float polyobj_positionZ;
+    int32 roof_orientation;
+    int32 roof_texture;
+    int32 unused;  // always -1
+    int32 roof_underside_texture;
+    int32 unused;  // always -1
 };
 */
 
@@ -84,27 +88,31 @@ export class Dugn {
 export class Cell {
     private v: DataView;
     readonly pairs: {n: number, s: Uint8Array}[] = [];
+    readonly offsetAfterPairs: number;
 
-    constructor(private version: number, r: BufferReader) {
+    constructor(readonly version: number, r: BufferReader) {
+        const offset = r.offset;
+        r.offset += 140;
+        for (let i = 0; i < 6; i++) {
+            const n = r.readU32();
+            const s = r.readStrZ();
+            this.pairs.push({n, s});
+        }
+        this.offsetAfterPairs = r.offset - offset;
         switch (version) {
         case 10:
-            const offset = r.offset;
-            r.offset += 140;
-            for (let i = 0; i < 6; i++) {
-                const n = r.readU32();
-                const s = r.readStrZ();
-                this.pairs.push({n, s});
-            }
             r.offset += 8;
-            this.v = new DataView(r.buffer, offset, r.offset - offset);
             break;
         case 13:
-            this.v = new DataView(r.buffer, r.offset, 230);
-            r.offset += 230;
+            if (this.offsetAfterPairs !== 170) {
+                throw new Error('unexpected non-empty string field in DUGN v13');
+            }
+            r.offset += 60;
             break;
         default:
             throw new Error('unknown DUGN version ' + version);
         }
+        this.v = new DataView(r.buffer, offset, r.offset - offset);
     }
 
     getAttr(n: number): number {
@@ -123,6 +131,14 @@ export class Cell {
     get west_door(): number { return this.getAttr(9); }
     get stairs_texture(): number { return this.getAttr(10); }
     get stairs_orientation(): number { return this.getAttr(11); }
+
+    get unknown1(): number {
+        return this.v.getInt32(this.offsetAfterPairs, true);
+    }
+    get unknown2(): number {
+        return this.v.getInt32(this.offsetAfterPairs + 4, true);
+    }
+
     get polyobj_index(): number {
         return this.version === 13 ? this.v.getInt32(178, true) : -1;
     }

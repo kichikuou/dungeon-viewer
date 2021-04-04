@@ -4,6 +4,7 @@ import { DungeonCollection } from './dungeon_collection.js';
 import { DungeonModel, CellModel, PolyObjModelFactory } from './model.js';
 import createLib from './lib.js';
 export const $ = document.querySelector.bind(document);
+const sjisDecoder = new TextDecoder('shift-jis');
 class DungeonViewer {
     constructor(lib) {
         this.lib = lib;
@@ -50,7 +51,9 @@ class DungeonViewer {
         this.camera.position.set(dgn.sizeX / 2, dgn.sizeY * 2, 50);
         this.controls.target.set(dgn.sizeX / 2, dgn.sizeY / 2, dgn.sizeZ / 2);
         this.dirty = true;
-        $('table.cell-info').hidden = true;
+        $('#cellinfo').hidden = true;
+        $('#cellinfo-rance6').hidden = true;
+        $('#cellinfo-galzoo').hidden = true;
     }
     onCanvasClick(evt) {
         if (!this.model) {
@@ -83,7 +86,34 @@ class DungeonViewer {
         for (let i = 0; i < 35; i++) {
             $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
         }
-        $('table.cell-info').hidden = false;
+        $('#cell-unknown1').innerText = cell.unknown1 + '';
+        $('#cell-unknown2').innerText = cell.unknown2 + '';
+        $('#cellinfo').hidden = false;
+        if (cell.version == 10) {
+            for (let i = 0; i < 6; i++) {
+                $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
+                $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';
+            }
+            $('#cellinfo-rance6').hidden = false;
+        }
+        else if (cell.version == 13) {
+            $('#cell-galzoo178').innerText = cell.polyobj_index + '';
+            if (cell.polyobj_index >= 0) {
+                const name = this.polyModelFactory.polyobj.objects[cell.polyobj_index].name;
+                $('#cell-galzoo178').innerText += ' (' + sjisDecoder.decode(name) + ')';
+            }
+            $('#cell-galzoo182').innerText = cell.polyobj_scale.toFixed(3);
+            $('#cell-galzoo186').innerText = cell.polyobj_rotationY.toFixed(3);
+            $('#cell-galzoo190').innerText = cell.polyobj_rotationZ.toFixed(3);
+            $('#cell-galzoo194').innerText = cell.polyobj_rotationX.toFixed(3);
+            $('#cell-galzoo198').innerText = cell.polyobj_positionX.toFixed(3);
+            $('#cell-galzoo202').innerText = cell.polyobj_positionY.toFixed(3);
+            $('#cell-galzoo206').innerText = cell.polyobj_positionZ.toFixed(3);
+            $('#cell-galzoo210').innerText = cell.roof_orientation + '';
+            $('#cell-galzoo214').innerText = cell.roof_texture + '';
+            $('#cell-galzoo222').innerText = cell.roof_underside_texture + '';
+            $('#cellinfo-galzoo').hidden = false;
+        }
     }
 }
 class SelectionMarker extends THREE.Mesh {

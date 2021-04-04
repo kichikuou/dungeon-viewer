@@ -162,9 +162,9 @@ class MaterialCache extends ResourceManager {
     }
 }
 export class PolyObjModelFactory extends ResourceManager {
-    constructor(po, lib) {
+    constructor(polyobj, lib) {
         super();
-        this.po = po;
+        this.polyobj = polyobj;
         this.lib = lib;
         this.models = [];
         this.materials = [];
@@ -173,7 +173,7 @@ export class PolyObjModelFactory extends ResourceManager {
         if (this.models[index]) {
             return this.models[index].clone();
         }
-        const obj = this.po.objects[index];
+        const obj = this.polyobj.objects[index];
         const model = new THREE.Group();
         for (const part of obj.parts) {
             const positions = [];
@@ -205,7 +205,7 @@ export class PolyObjModelFactory extends ResourceManager {
     }
     getMaterial(index) {
         if (!this.materials[index]) {
-            const textureData = this.po.textures[index];
+            const textureData = this.polyobj.textures[index];
             const qnt = decodeQnt(this.lib, textureData);
             const texture = this.track(new THREE.DataTexture(qnt.buf, qnt.width, qnt.height, THREE.RGBAFormat, THREE.UnsignedByteType));
             const params = { map: texture, transparent: qnt.hasAlpha };

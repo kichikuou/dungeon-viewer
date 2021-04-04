@@ -182,7 +182,7 @@ export class PolyObjModelFactory extends ResourceManager {
     private models: THREE.Group[] = [];
     private materials: THREE.MeshBasicMaterial[] = [];
 
-    constructor(private po: PolyObj, private lib: LibModule) {
+    constructor(readonly polyobj: PolyObj, private lib: LibModule) {
         super();
     }
 
@@ -191,7 +191,7 @@ export class PolyObjModelFactory extends ResourceManager {
             return this.models[index].clone();
         }
 
-        const obj = this.po.objects[index];
+        const obj = this.polyobj.objects[index];
         const model = new THREE.Group();
         for (const part of obj.parts) {
             const positions: number[][] = [];
@@ -224,7 +224,7 @@ export class PolyObjModelFactory extends ResourceManager {
 
     private getMaterial(index: number): THREE.MeshBasicMaterial {
         if (!this.materials[index]) {
-            const textureData = this.po.textures[index];
+            const textureData = this.polyobj.textures[index];
             const qnt = decodeQnt(this.lib, textureData);
             const texture = this.track(new THREE.DataTexture(qnt.buf, qnt.width, qnt.height, THREE.RGBAFormat, THREE.UnsignedByteType));
             const params = {map: texture, transparent: qnt.hasAlpha};
