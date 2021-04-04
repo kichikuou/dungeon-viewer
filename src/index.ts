@@ -1,12 +1,13 @@
 import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
 import {OrbitControls} from "https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js";
 import {DungeonCollection} from './dungeon_collection.js';
-import {DungeonModel, CellModel} from './model.js';
+import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
 import createLib, {LibModule} from './lib.js';
 
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 
 class DungeonViewer {
+    private polyModelFactory: PolyObjModelFactory | null = null;
     private renderer = new THREE.WebGLRenderer();
     private camera = new THREE.PerspectiveCamera(50, 800 / 600, 0.5, 100);
     private controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -38,10 +39,16 @@ class DungeonViewer {
     async view(dungeons: DungeonCollection, index: number) {
         const dgn = await dungeons.getDugn(index);
         const dtx = await dungeons.getDtex(index);
+        if (!this.polyModelFactory) {
+            const po = await dungeons.getPolyObj();
+            if (po) {
+                this.polyModelFactory = new PolyObjModelFactory(po, this.lib);
+            }
+        }
         if (this.model) {
             this.model.dispose();
         }
-        this.model = new DungeonModel(dgn, dtx, this.lib);
+        this.model = new DungeonModel(dgn, dtx, this.polyModelFactory, this.lib);
         this.scene = new THREE.Scene();
         this.scene.add(this.model);
 

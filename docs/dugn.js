@@ -32,7 +32,11 @@ struct cell {
         } unknown[6];
         uint8 unknown[8];
     } else if (version == 13) {
-        uint8 unknown[90];
+        uint8 unknown[38];
+        int32 polyobj_index;
+        float polyobj_scale;
+        float polyobj_rotation;
+        uint8 unknown[40];
     }
 };
 */
@@ -97,4 +101,13 @@ export class Cell {
     get west_door() { return this.getAttr(9); }
     get stairs_texture() { return this.getAttr(10); }
     get stairs_orientation() { return this.getAttr(11); }
+    get polyobj_index() {
+        return this.version === 13 ? this.v.getInt32(178, true) : -1;
+    }
+    get polyobj_scale() {
+        return this.version === 13 ? this.v.getFloat32(182, true) : 1;
+    }
+    get polyobj_rotation() {
+        return this.version === 13 ? this.v.getFloat32(186, true) : 0;
+    }
 }

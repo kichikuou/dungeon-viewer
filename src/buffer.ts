@@ -31,6 +31,12 @@ export class BufferReader {
         return val;
     }
 
+    readF32(): number {
+        const val = this.view.getFloat32(this.offset, true);
+        this.offset += 4;
+        return val;
+    }
+
     readFourCC(): string {
         const fourcc = new Uint8Array(this.view.buffer, this.offset, 4);
         this.offset += 4;

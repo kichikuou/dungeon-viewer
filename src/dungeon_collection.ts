@@ -1,5 +1,6 @@
 import {Dtex} from './dtex.js';
 import {Dugn} from './dugn.js';
+import {PolyObj} from './polyobj.js';
 import {BufferReader, readFileAsArrayBuffer} from './buffer.js';
 
 /*
@@ -21,6 +22,7 @@ export class DungeonCollection {
     private dgn: Blob[] = [];
     private dtx: Blob[] = [];
     private tes: Blob[] = [];
+    private polyobj: Blob | null = null;
 
     async addFile(file: File) {
         if (file.name.toLowerCase() === 'dungeondata.dlf') {
@@ -64,6 +66,11 @@ export class DungeonCollection {
             }
             return;
         }
+        if (file.name.toLowerCase() === 'polyobj.lin') {
+            // GALZOO Island
+            this.polyobj = file;
+            return;
+        }
         console.log('unrecognized file: ' + file.name);
     }
 
@@ -82,5 +89,12 @@ export class DungeonCollection {
 
     async getDtex(i: number): Promise<Dtex> {
         return new Dtex(await readFileAsArrayBuffer(this.dtx[i]));
+    }
+
+    async getPolyObj(): Promise<PolyObj | null> {
+        if (!this.polyobj) {
+            return null;
+        }
+        return new PolyObj(await readFileAsArrayBuffer(this.polyobj));
     }
 }

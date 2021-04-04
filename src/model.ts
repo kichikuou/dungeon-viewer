@@ -1,6 +1,7 @@
 import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
 import {Dtex, TextureType} from './dtex.js';
 import {Dugn, Cell} from './dugn.js';
+import {PolyObj} from './polyobj.js';
 import {LibModule} from './lib.js';
 
 type Qnt = {width: number, height: number, hasAlpha: boolean, buf: Uint8Array};
@@ -17,7 +18,7 @@ export class DungeonModel extends THREE.Group {
     public sizeY: number;
     public sizeZ: number;
 
-    constructor(dgn: Dugn, dtx: Dtex, lib: LibModule) {
+    constructor(dgn: Dugn, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
         super();
         this.sizeX = dgn.sizeX;
         this.sizeY = dgn.sizeY;
@@ -27,7 +28,7 @@ export class DungeonModel extends THREE.Group {
             for (let y = 0; y < dgn.sizeY; y++) {
                 for (let x = 0; x < dgn.sizeX; x++) {
                     const cell = dgn.cellAt(x, y, dgn.sizeZ - 1 - z);
-                    this.add(new CellModel(x, y, z, cell, this.materials));
+                    this.add(new CellModel(x, y, z, cell, this.materials, polyFactory));
                 }
             }
         }
@@ -39,7 +40,7 @@ export class DungeonModel extends THREE.Group {
 }
 
 export class CellModel extends THREE.Group {
-    constructor(public x: number, public y: number, public z: number, public cell: Cell, materials: MaterialCache) {
+    constructor(public x: number, public y: number, public z: number, public cell: Cell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
         if (cell.floor_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.floor_texture));
@@ -97,6 +98,14 @@ export class CellModel extends THREE.Group {
             plane.rotation.y = Math.PI / 2 * cell.stairs_orientation;
             plane.rotation.order = "ZYX";
         }
+        if (polyFactory && cell.polyobj_index >= 0) {
+            const obj = polyFactory.createModel(cell.polyobj_index);
+            const scale = cell.polyobj_scale / 2;
+            obj.scale.set(scale, scale, scale);
+            obj.rotation.y = cell.polyobj_rotation * Math.PI / -180;
+            obj.position.set(x + 0.5, y, z + 0.5);
+            this.add(obj);
+        }
     }
 
     private addPlane(material: THREE.MeshBasicMaterial) {
@@ -106,11 +115,28 @@ export class CellModel extends THREE.Group {
     }
 }
 
-class MaterialCache {
+class ResourceManager {
     private resources: Disposable[] = [];
+
+    protected track<T extends Disposable>(obj: T): T {
+        this.resources.push(obj);
+        return obj;
+    }
+
+    dispose() {
+        for (const obj of this.resources) {
+            obj.dispose();
+        }
+        this.resources = [];
+    }
+}
+
+class MaterialCache extends ResourceManager {
     private materials: THREE.MeshBasicMaterial[][] = [];
 
-    constructor(private dtx: Dtex, private lib: LibModule) {}
+    constructor(private dtx: Dtex, private lib: LibModule) {
+        super();
+    }
 
     get(type: number, index: number): THREE.MeshBasicMaterial {
         if (!this.materials[type])
@@ -131,17 +157,61 @@ class MaterialCache {
         }
         return this.materials[type][index];
     }
+}
 
-    private track<T extends Disposable>(obj: T): T {
-        this.resources.push(obj);
-        return obj;
+export class PolyObjModelFactory extends ResourceManager {
+    private models: THREE.Group[] = [];
+    private materials: THREE.MeshBasicMaterial[] = [];
+
+    constructor(private po: PolyObj, private lib: LibModule) {
+        super();
     }
 
-    dispose() {
-        for (const obj of this.resources) {
-            obj.dispose();
+    createModel(index: number): THREE.Object3D {
+        if (this.models[index]) {
+            return this.models[index].clone();
         }
-        this.resources = [];
+
+        const obj = this.po.objects[index];
+        const model = new THREE.Group();
+        for (const part of obj.parts) {
+            const positions: number[][] = [];
+            const uvs: number[][] = [];
+            for (const triangle of part.triangles) {
+                if (!positions[triangle.material]) {
+                    positions[triangle.material] = [];
+                    uvs[triangle.material] = [];
+                }
+                for (const i of [0, 2, 1]) {  // left->right handed system
+                    const pos = part.vertices[triangle.index[i]];
+                    positions[triangle.material].push(pos.x, pos.y, -pos.z);
+                    const uv = triangle.uv[i];
+                    uvs[triangle.material].push(uv.u, uv.v);
+                }
+            }
+            for (let i = 0; i < positions.length; i++) {
+                if (!positions[i]) {
+                    continue;
+                }
+                const geometry = this.track(new THREE.BufferGeometry());
+                geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions[i]), 3));
+                geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs[i]), 2));
+                model.add(new THREE.Mesh(geometry, this.getMaterial(obj.materials[i])));
+            }
+        }
+        this.models[index] = model;
+        return model.clone();
+    }
+
+    private getMaterial(index: number): THREE.MeshBasicMaterial {
+        if (!this.materials[index]) {
+            const textureData = this.po.textures[index];
+            const qnt = decodeQnt(this.lib, textureData);
+            const texture = this.track(new THREE.DataTexture(qnt.buf, qnt.width, qnt.height, THREE.RGBAFormat, THREE.UnsignedByteType));
+            const params = {map: texture, transparent: qnt.hasAlpha};
+            this.materials[index] = this.track(new THREE.MeshBasicMaterial(params));
+        }
+        return this.materials[index];
     }
 }
 
