@@ -42,7 +42,11 @@ struct cell {
         float polyobj_positionX;
         float polyobj_positionY;
         float polyobj_positionZ;
-        uint8 unknown[20];
+        int32 roof_orientation;
+        int32 roof_texture;
+        int32 unused;  // always -1
+        int32 roof_underside_texture;
+        int32 unused;  // always -1
     }
 };
 */
@@ -142,5 +146,14 @@ export class Cell {
     }
     get polyobj_positionZ(): number {
         return this.version === 13 ? this.v.getFloat32(206, true) : 0;
+    }
+    get roof_orientation(): number {
+        return this.version === 13 ? this.v.getInt32(210, true) : -1;
+    }
+    get roof_texture(): number {
+        return this.version === 13 ? this.v.getInt32(214, true) : -1;
+    }
+    get roof_underside_texture(): number {
+        return this.version === 13 ? this.v.getInt32(222, true) : -1;
     }
 }

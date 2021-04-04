@@ -80,8 +80,8 @@ export class CellModel extends THREE.Group {
             const plane = this.addPlane(materials.get(TextureType.Stairs, cell.stairs_texture));
             plane.scale.y = Math.sqrt(2);
             plane.position.set(x + 0.5, y + 0.5, z + 0.5);
-            plane.rotation.x = Math.PI / -4;
             plane.rotation.y = Math.PI / 2 * cell.stairs_orientation;
+            plane.rotation.x = Math.PI / -4;
             plane.rotation.order = "ZYX";
         }
         if (polyFactory && cell.polyobj_index >= 0) {
@@ -94,6 +94,22 @@ export class CellModel extends THREE.Group {
             const posZ = z + 0.5 - cell.polyobj_positionZ / 2;
             obj.position.set(posX, posY, posZ);
             this.add(obj);
+        }
+        if (cell.roof_texture >= 0) {
+            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_texture));
+            plane.scale.y = Math.sqrt(2);
+            plane.position.set(x + 0.5, y + 0.5, z + 0.5);
+            plane.rotation.y = Math.PI / 2 * cell.roof_orientation;
+            plane.rotation.x = Math.PI / -4;
+            plane.rotation.order = "ZYX";
+        }
+        if (cell.roof_underside_texture >= 0) {
+            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_underside_texture));
+            plane.scale.y = Math.sqrt(2);
+            plane.position.set(x + 0.5, y + 0.5, z + 0.5);
+            plane.rotation.y = Math.PI + Math.PI / 2 * cell.roof_orientation;
+            plane.rotation.x = Math.PI / 4;
+            plane.rotation.order = "ZYX";
         }
     }
     addPlane(material) {
