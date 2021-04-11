@@ -43,12 +43,12 @@ export class CellModel extends THREE.Group {
     constructor(public x: number, public y: number, public z: number, public cell: Cell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
         if (cell.floor_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.floor_texture));
+            const plane = this.addPlane(materials.get(TextureType.Floor, cell.floor_texture));
             plane.rotation.x = Math.PI / -2;
             plane.position.set(x + 0.5, y, z + 0.5);
         }
         if (cell.ceiling_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Floor, cell.ceiling_texture));
+            const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.ceiling_texture));
             plane.rotation.x = Math.PI / 2;
             plane.position.set(x + 0.5, y + 1.0, z + 0.5);
         }

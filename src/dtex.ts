@@ -2,8 +2,8 @@ import {BufferReader} from './buffer.js';
 
 export enum TextureType {
     Wall = 0,
-    Ceiling = 1,
-    Floor = 2,
+    Floor = 1,
+    Ceiling = 2,
     Stairs = 3,
     Door = 4,
 }

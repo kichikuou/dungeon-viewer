@@ -2,8 +2,8 @@ import { BufferReader } from './buffer.js';
 export var TextureType;
 (function (TextureType) {
     TextureType[TextureType["Wall"] = 0] = "Wall";
-    TextureType[TextureType["Ceiling"] = 1] = "Ceiling";
-    TextureType[TextureType["Floor"] = 2] = "Floor";
+    TextureType[TextureType["Floor"] = 1] = "Floor";
+    TextureType[TextureType["Ceiling"] = 2] = "Ceiling";
     TextureType[TextureType["Stairs"] = 3] = "Stairs";
     TextureType[TextureType["Door"] = 4] = "Door";
 })(TextureType || (TextureType = {}));
