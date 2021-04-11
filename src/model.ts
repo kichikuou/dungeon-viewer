@@ -50,6 +50,7 @@ export class CellModel extends THREE.Group {
         if (cell.ceiling_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.ceiling_texture));
             plane.rotation.x = Math.PI / 2;
+            plane.rotation.z = Math.PI;
             plane.position.set(x + 0.5, y + 1.0, z + 0.5);
         }
         if (cell.north_texture >= 0) {
