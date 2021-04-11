@@ -11,6 +11,7 @@ interface Disposable {
 }
 
 const planeGeometry = new THREE.PlaneGeometry(1, 1);
+const stairsGeometry = createStairsGeometry();
 
 export class DungeonModel extends THREE.Group {
     private materials: MaterialCache;
@@ -92,12 +93,9 @@ export class CellModel extends THREE.Group {
             plane.position.set(x, y + 0.5, z + 0.5);
         }
         if (cell.stairs_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.stairs_texture));
-            plane.scale.y = Math.sqrt(2);
-            plane.position.set(x + 0.5, y + 0.5, z + 0.5);
-            plane.rotation.y = Math.PI / 2 * cell.stairs_orientation;
-            plane.rotation.x = Math.PI / -4;
-            plane.rotation.order = "ZYX";
+            const stairs = this.addStairs(materials.get(TextureType.Stairs, cell.stairs_texture));
+            stairs.position.set(x + 0.5, y + 0.5, z + 0.5);
+            stairs.rotation.y = Math.PI / 2 * cell.stairs_orientation;
         }
         if (polyFactory && cell.polyobj_index >= 0) {
             const obj = polyFactory.createModel(cell.polyobj_index);
@@ -128,10 +126,16 @@ export class CellModel extends THREE.Group {
         }
     }
 
-    private addPlane(material: THREE.MeshBasicMaterial) {
+    private addPlane(material: THREE.MeshBasicMaterial): THREE.Object3D {
         const plane = new THREE.Mesh(planeGeometry, material);
         this.add(plane);
         return plane;
+    }
+
+    private addStairs(material: THREE.MeshBasicMaterial): THREE.Object3D {
+        const stairs = new THREE.Mesh(stairsGeometry, material);
+        this.add(stairs);
+        return stairs;
     }
 }
 
@@ -233,6 +237,55 @@ export class PolyObjModelFactory extends ResourceManager {
         }
         return this.materials[index];
     }
+}
+
+function createStairsGeometry(): THREE.BufferGeometry {
+    const vertices = [
+        {pos: [0, 6/6, 0/6], uv: [0, 12/12]},
+        {pos: [1, 6/6, 0/6], uv: [1, 12/12]},
+        {pos: [0, 6/6, 1/6], uv: [0, 11/12]},
+        {pos: [1, 6/6, 1/6], uv: [1, 11/12]},
+        {pos: [0, 5/6, 1/6], uv: [0, 10/12]},
+        {pos: [1, 5/6, 1/6], uv: [1, 10/12]},
+        {pos: [0, 5/6, 2/6], uv: [0, 9/12]},
+        {pos: [1, 5/6, 2/6], uv: [1, 9/12]},
+        {pos: [0, 4/6, 2/6], uv: [0, 8/12]},
+        {pos: [1, 4/6, 2/6], uv: [1, 8/12]},
+        {pos: [0, 4/6, 3/6], uv: [0, 7/12]},
+        {pos: [1, 4/6, 3/6], uv: [1, 7/12]},
+        {pos: [0, 3/6, 3/6], uv: [0, 6/12]},
+        {pos: [1, 3/6, 3/6], uv: [1, 6/12]},
+        {pos: [0, 3/6, 4/6], uv: [0, 5/12]},
+        {pos: [1, 3/6, 4/6], uv: [1, 5/12]},
+        {pos: [0, 2/6, 4/6], uv: [0, 4/12]},
+        {pos: [1, 2/6, 4/6], uv: [1, 4/12]},
+        {pos: [0, 2/6, 5/6], uv: [0, 3/12]},
+        {pos: [1, 2/6, 5/6], uv: [1, 3/12]},
+        {pos: [0, 1/6, 5/6], uv: [0, 2/12]},
+        {pos: [1, 1/6, 5/6], uv: [1, 2/12]},
+        {pos: [0, 1/6, 6/6], uv: [0, 1/12]},
+        {pos: [1, 1/6, 6/6], uv: [1, 1/12]},
+        {pos: [0, 0/6, 6/6], uv: [0, 0/12]},
+        {pos: [1, 0/6, 6/6], uv: [1, 0/12]},
+    ];
+    const indices = [];
+    for (let i = 0; i < 12; i++) {
+        indices.push(i*2+0, i*2+2, i*2+1,  i*2+1, i*2+2, i*2+3);
+    }
+    const positions = new Float32Array(vertices.length * 3);
+    const uvs = new Float32Array(vertices.length * 2);
+    for (let i = 0; i < vertices.length; i++) {
+        positions.set(vertices[i].pos, i * 3);
+        uvs.set(vertices[i].uv, i * 2);
+    }
+    for (let i = 0; i < vertices.length * 3; i++) {
+        positions[i] -= 0.5;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    return geometry;
 }
 
 function decodeQnt(lib: LibModule, buf: Uint8Array): Qnt {
