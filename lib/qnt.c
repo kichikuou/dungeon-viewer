@@ -42,13 +42,13 @@ struct qnt_header {
 };
 
 static uint32_t getdw(const uint8_t *b, int index) {
-    return b[index] | b[index + 1] << 8 | b[index + 2] << 16 | b[index + 3] << 24;
+	return b[index] | b[index + 1] << 8 | b[index + 2] << 16 | b[index + 3] << 24;
 }
 
 static uint8_t *decompress(const uint8_t *compressed, uint32_t compressed_size, unsigned long raw_size) {
-    uint8_t *raw = malloc(raw_size);
-    if (!raw)
-        return NULL;
+	uint8_t *raw = malloc(raw_size);
+	if (!raw)
+		return NULL;
 	unsigned long uncompressed_size = raw_size;
 	if (uncompress(raw, &uncompressed_size, compressed, compressed_size) != Z_OK)
 		return NULL;
@@ -60,13 +60,13 @@ static uint8_t *decompress(const uint8_t *compressed, uint32_t compressed_size, 
 static bool qnt_extract_header(const uint8_t *b, struct qnt_header *qnt) {
 	if (b[0] != 'Q' || b[1] != 'N' || b[2] != 'T' || b[3] != 0)
 		return false;
-    int ofs = 4;
+	int ofs = 4;
 	qnt->version     = getdw(b, ofs); ofs += 4;
-    if (qnt->version) {
-        qnt->header_size = getdw(b, ofs); ofs += 4;
-    } else {
-        qnt->header_size = 48;
-    }
+	if (qnt->version) {
+		qnt->header_size = getdw(b, ofs); ofs += 4;
+	} else {
+		qnt->header_size = 48;
+	}
 	qnt->x           = getdw(b, ofs); ofs += 4;
 	qnt->y           = getdw(b, ofs); ofs += 4;
 	qnt->width       = getdw(b, ofs); ofs += 4;
@@ -77,8 +77,8 @@ static bool qnt_extract_header(const uint8_t *b, struct qnt_header *qnt) {
 	qnt->alpha_size  = getdw(b, ofs); ofs += 4;
 	if (qnt->bpp != 24) {
 		fprintf(stderr, "Unsupported bits-per-pixel: %d\n", qnt->bpp);
-        return false;
-    }
+		return false;
+	}
 	return true;
 }
 
@@ -92,13 +92,13 @@ static uint8_t *extract_pixels(struct qnt_header *qnt, const uint8_t *buf) {
 		return NULL;
 
 	uint8_t *pixels = malloc(width * height * 4);
-    memset(pixels, 0xff, width * height * 4);
+	memset(pixels, 0, width * height * 4);
 
 	uint8_t *p = raw;
 	for (int c = 2; c >= 0; c--) {
 		for (int y = 0; y < height; y += 2) {
-            uint8_t *row1 = pixels + y * width * 4;
-            uint8_t *row2 = row1 + width * 4;
+			uint8_t *row1 = pixels + y * width * 4;
+			uint8_t *row2 = row1 + width * 4;
 			for (int x = 0; x < width; x += 2) {
 				row1[ x    * 4 + c] = *p++;
 				row2[ x    * 4 + c] = *p++;
@@ -130,8 +130,8 @@ static void unfilter(uint8_t *pixels, int width, int height) {
 			pixels[x*4+c] = pixels[(x-1)*4+c] - pixels[x*4+c];
 	}
 	for (int y = 1; y < height; y++) {
-        uint8_t *row = pixels + y * width * 4;
-        uint8_t *prevrow = row - width * 4;
+		uint8_t *row = pixels + y * width * 4;
+		uint8_t *prevrow = row - width * 4;
 		for (int c = 0; c < 4; c++)
 			row[c] = prevrow[c] - row[c];
 
@@ -179,6 +179,9 @@ uint8_t *qnt_extract(const uint8_t *buf) {
 		}
 		merge_alpha_channel(pixels, alpha, qnt.width, qnt.height);
 		free(alpha);
+	} else {
+		// unfilter() will copy this to alpha channels of all pixels.
+		pixels[3] = 0xff;
 	}
 
 	unfilter(pixels, qnt.width, qnt.height);
