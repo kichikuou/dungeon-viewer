@@ -6,6 +6,7 @@ export var TextureType;
     TextureType[TextureType["Ceiling"] = 2] = "Ceiling";
     TextureType[TextureType["Stairs"] = 3] = "Stairs";
     TextureType[TextureType["Door"] = 4] = "Door";
+    TextureType[TextureType["SkyBox"] = 5] = "SkyBox";
 })(TextureType || (TextureType = {}));
 /*
 struct dtex {
@@ -33,15 +34,15 @@ export class Dtex {
         if (version !== 0 && version !== 1) {
             throw new Error('unknown DTEX version');
         }
-        const nr_rows = r.readU32();
-        const nr_cols = r.readU32();
-        for (let row = 0; row < nr_rows; row++) {
+        this.nr_rows = r.readU32();
+        this.nr_cols = r.readU32();
+        for (let row = 0; row < this.nr_rows; row++) {
             this.data[row] = [];
             const nr_items = r.readU32();
-            if (nr_items !== nr_cols) {
+            if (nr_items !== this.nr_cols) {
                 throw new Error('unexpected number of textures');
             }
-            for (let col = 0; col < nr_cols; col++) {
+            for (let col = 0; col < this.nr_cols; col++) {
                 const size = r.readU32();
                 if (size !== 0) {
                     this.data[row][col] = r.readBytes(size);
