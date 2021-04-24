@@ -21,7 +21,7 @@ if (args['--help'] || args._.length !== 1) {
     process.exit(args['--help'] ? 0 : 1);
 }
 
-const dlfHeaderSize = 0x20 + 99 * 3 * 8;
+const dlfHeaderSize = 8 + 100 * 3 * 8;
 const fd = fs.openSync(args._[0], 'r');
 const headerBuf = Buffer.alloc(dlfHeaderSize);
 if (fs.readSync(fd, headerBuf, 0, dlfHeaderSize) !== dlfHeaderSize)
@@ -35,8 +35,8 @@ if (r.readFourCC() !== "DLF\0") {
 if (args['--output'])
     fs.mkdirSync(args['--output'], {recursive: true});
 
-r.offset = 0x20;
-for (let i = 1; i <= 99; i++) {
+r.offset = 8;
+for (let i = 0; i < 100; i++) {
     const dgnOffset = r.readU32();
     const dgnLength = r.readU32();
     const dtxOffset = r.readU32();

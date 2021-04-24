@@ -4,8 +4,8 @@ import { PolyObj } from './polyobj.js';
 import { BufferReader, readFileAsArrayBuffer } from './buffer.js';
 /*
 struct dlf_header {
-    char magic[4];  // "DLF\0"
-    uint32 reserved[7]; // must be zero
+    char magic[4];   // "DLF\0"
+    uint32 reserved; // zero
     struct {
         uint32 dgn_offset;
         uint32 dgn_length;
@@ -13,7 +13,7 @@ struct dlf_header {
         uint32 dtx_length;
         uint32 tes_offset;
         uint32 tes_length;
-    } index[99];
+    } index[100];
 };
 */
 export class DungeonCollection {
@@ -26,13 +26,13 @@ export class DungeonCollection {
     async addFile(file) {
         if (file.name.toLowerCase() === 'dungeondata.dlf') {
             // Rance VI
-            const headerBuf = await readFileAsArrayBuffer(file.slice(0, 0x20 + 99 * 24));
+            const headerBuf = await readFileAsArrayBuffer(file.slice(0, 8 + 100 * 24));
             const r = new BufferReader(headerBuf);
             if (r.readFourCC() !== "DLF\0") {
                 throw new Error('not a dlf file');
             }
-            r.offset = 0x20;
-            for (let i = 1; i <= 99; i++) {
+            r.offset = 8;
+            for (let i = 0; i < 100; i++) {
                 const dgnOffset = r.readU32();
                 const dgnLength = r.readU32();
                 const dtxOffset = r.readU32();
