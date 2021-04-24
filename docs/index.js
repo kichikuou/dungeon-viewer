@@ -10,7 +10,7 @@ class DungeonViewer {
         this.lib = lib;
         this.polyModelFactory = null;
         this.renderer = new THREE.WebGLRenderer();
-        this.camera = new THREE.PerspectiveCamera(50, 800 / 600, 0.5, 100);
+        this.camera = new THREE.PerspectiveCamera(50, 800 / 600, 1, 200);
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.raycaster = new THREE.Raycaster();
         this.scene = null;
@@ -48,8 +48,8 @@ class DungeonViewer {
         this.model = new DungeonModel(dgn, dtx, this.polyModelFactory, this.lib);
         this.scene = new THREE.Scene();
         this.scene.add(this.model);
-        this.camera.position.set(dgn.sizeX / 2, dgn.sizeY * 2, 50);
-        this.controls.target.set(dgn.sizeX / 2, dgn.sizeY / 2, dgn.sizeZ / 2);
+        this.camera.position.set(dgn.sizeX, dgn.sizeY * 4, 40);
+        this.controls.target.set(dgn.sizeX - 1, dgn.sizeY - 1, -dgn.sizeZ - 1);
         this.dirty = true;
         $('#cellinfo').hidden = true;
         $('#cellinfo-rance6').hidden = true;
@@ -74,15 +74,15 @@ class DungeonViewer {
             return;
         }
         this.scene.add(this.selectionMarker);
-        this.selectionMarker.position.set(obj.x + 0.5, obj.y + 0.5, obj.z + 0.5);
+        this.selectionMarker.position.set(obj.x * 2, obj.y * 2, -obj.z * 2);
         const cell = obj.cell;
         // Scenario coordinates: Used in scenario files (before being transformed
         // by CDungeon::TransMapPos()). X increases from west to east, Y increases
         // from north to south, Z increases from down to up.
-        $('#scenario-coords').innerText = `(${obj.x + 1}, ${obj.z + 1}, ${obj.y + 1})`;
+        $('#scenario-coords').innerText = `(${obj.x + 1}, ${this.model.sizeZ - obj.z}, ${obj.y + 1})`;
         // Dungeon coordinates: Used in DrawDungeon.DLL. X increases from west
         // to east, Y increases from down to up, Z increases from south to north.
-        $('#dungeon-coords').innerText = `(${obj.x}, ${obj.y}, ${this.model.sizeZ - 1 - obj.z})`;
+        $('#dungeon-coords').innerText = `(${obj.x}, ${obj.y}, ${obj.z})`;
         for (let i = 0; i < 35; i++) {
             $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
         }
@@ -118,7 +118,7 @@ class DungeonViewer {
 }
 class SelectionMarker extends THREE.Mesh {
     constructor() {
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const geometry = new THREE.BoxGeometry(2, 2, 2);
         const material = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.5 });
         super(geometry, material);
     }

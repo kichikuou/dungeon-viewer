@@ -10,7 +10,7 @@ interface Disposable {
     dispose(): void;
 }
 
-const planeGeometry = new THREE.PlaneGeometry(1, 1);
+const planeGeometry = new THREE.PlaneGeometry(2, 2);
 const stairsGeometry = createStairsGeometry();
 
 export class DungeonModel extends THREE.Group {
@@ -28,7 +28,7 @@ export class DungeonModel extends THREE.Group {
         for (let z = 0; z < dgn.sizeZ; z++) {
             for (let y = 0; y < dgn.sizeY; y++) {
                 for (let x = 0; x < dgn.sizeX; x++) {
-                    const cell = dgn.cellAt(x, y, dgn.sizeZ - 1 - z);
+                    const cell = dgn.cellAt(x, y, z);
                     this.add(new CellModel(x, y, z, cell, this.materials, polyFactory));
                 }
             }
@@ -43,75 +43,75 @@ export class DungeonModel extends THREE.Group {
 export class CellModel extends THREE.Group {
     constructor(public x: number, public y: number, public z: number, public cell: Cell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
+        const [wx, wy, wz] = [x * 2, y * 2, -z * 2];
         if (cell.floor_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Floor, cell.floor_texture));
             plane.rotation.x = Math.PI / -2;
-            plane.position.set(x + 0.5, y, z + 0.5);
+            plane.position.set(wx, wy - 1, wz);
         }
         if (cell.ceiling_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.ceiling_texture));
             plane.rotation.x = Math.PI / 2;
             plane.rotation.z = Math.PI;
-            plane.position.set(x + 0.5, y + 1.0, z + 0.5);
+            plane.position.set(wx, wy + 1, wz);
         }
         if (cell.north_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Wall, cell.north_texture));
-            plane.position.set(x + 0.5, y + 0.5, z);
+            plane.position.set(wx, wy, wz - 1);
         }
         if (cell.south_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Wall, cell.south_texture));
             plane.rotation.y = Math.PI;
-            plane.position.set(x + 0.5, y + 0.5, z + 1.0);
+            plane.position.set(wx, wy, wz + 1);
         }
         if (cell.east_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Wall, cell.east_texture));
             plane.rotation.y = Math.PI / -2;
-            plane.position.set(x + 1.0, y + 0.5, z + 0.5);
+            plane.position.set(wx + 1, wy, wz);
         }
         if (cell.west_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Wall, cell.west_texture));
             plane.rotation.y = Math.PI / 2;
-            plane.position.set(x, y + 0.5, z + 0.5);
+            plane.position.set(wx - 1, wy, wz);
         }
         if (cell.north_door >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Door, cell.north_door));
-            plane.position.set(x + 0.5, y + 0.5, z);
+            plane.position.set(wx, wy, wz - 1);
         }
         if (cell.south_door >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Door, cell.south_door));
             plane.rotation.y = Math.PI;
-            plane.position.set(x + 0.5, y + 0.5, z + 1.0);
+            plane.position.set(wx, wy, wz + 1);
         }
         if (cell.east_door >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Door, cell.east_door));
             plane.rotation.y = Math.PI / -2;
-            plane.position.set(x + 1.0, y + 0.5, z + 0.5);
+            plane.position.set(wx + 1, wy, wz);
         }
         if (cell.west_door >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Door, cell.west_door));
             plane.rotation.y = Math.PI / 2;
-            plane.position.set(x, y + 0.5, z + 0.5);
+            plane.position.set(wx - 1, wy, wz);
         }
         if (cell.stairs_texture >= 0) {
             const stairs = this.addStairs(materials.get(TextureType.Stairs, cell.stairs_texture));
-            stairs.position.set(x + 0.5, y + 0.5, z + 0.5);
+            stairs.position.set(wx, wy, wz);
             stairs.rotation.y = Math.PI / 2 * cell.stairs_orientation;
         }
         if (polyFactory && cell.polyobj_index >= 0) {
             const obj = polyFactory.createModel(cell.polyobj_index);
-            const scale = cell.polyobj_scale / 2;
-            obj.scale.set(scale, scale, scale);
+            obj.scale.set(cell.polyobj_scale, cell.polyobj_scale, cell.polyobj_scale);
             obj.rotation.y = cell.polyobj_rotationY * Math.PI / -180;
-            const posX = x + 0.5 + cell.polyobj_positionX / 2;
-            const posY = y + cell.polyobj_positionY / 2;
-            const posZ = z + 0.5 - cell.polyobj_positionZ / 2;
+            const posX = wx + cell.polyobj_positionX;
+            const posY = wy - 1 + cell.polyobj_positionY;
+            const posZ = wz - cell.polyobj_positionZ;
             obj.position.set(posX, posY, posZ);
             this.add(obj);
         }
         if (cell.roof_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_texture));
             plane.scale.y = Math.sqrt(2);
-            plane.position.set(x + 0.5, y + 0.5, z + 0.5);
+            plane.position.set(wx, wy, wz);
             plane.rotation.y = Math.PI / 2 * cell.roof_orientation;
             plane.rotation.x = Math.PI / -4;
             plane.rotation.order = "ZYX";
@@ -119,7 +119,7 @@ export class CellModel extends THREE.Group {
         if (cell.roof_underside_texture >= 0) {
             const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_underside_texture));
             plane.scale.y = Math.sqrt(2);
-            plane.position.set(x + 0.5, y + 0.5, z + 0.5);
+            plane.position.set(wx, wy, wz);
             plane.rotation.y = Math.PI + Math.PI / 2 * cell.roof_orientation;
             plane.rotation.x = Math.PI / 4;
             plane.rotation.order = "ZYX";
@@ -241,32 +241,32 @@ export class PolyObjModelFactory extends ResourceManager {
 
 function createStairsGeometry(): THREE.BufferGeometry {
     const vertices = [
-        {pos: [0, 6/6, 0/6], uv: [0, 12/12]},
-        {pos: [1, 6/6, 0/6], uv: [1, 12/12]},
-        {pos: [0, 6/6, 1/6], uv: [0, 11/12]},
-        {pos: [1, 6/6, 1/6], uv: [1, 11/12]},
-        {pos: [0, 5/6, 1/6], uv: [0, 10/12]},
-        {pos: [1, 5/6, 1/6], uv: [1, 10/12]},
-        {pos: [0, 5/6, 2/6], uv: [0, 9/12]},
-        {pos: [1, 5/6, 2/6], uv: [1, 9/12]},
-        {pos: [0, 4/6, 2/6], uv: [0, 8/12]},
-        {pos: [1, 4/6, 2/6], uv: [1, 8/12]},
-        {pos: [0, 4/6, 3/6], uv: [0, 7/12]},
-        {pos: [1, 4/6, 3/6], uv: [1, 7/12]},
-        {pos: [0, 3/6, 3/6], uv: [0, 6/12]},
-        {pos: [1, 3/6, 3/6], uv: [1, 6/12]},
-        {pos: [0, 3/6, 4/6], uv: [0, 5/12]},
-        {pos: [1, 3/6, 4/6], uv: [1, 5/12]},
-        {pos: [0, 2/6, 4/6], uv: [0, 4/12]},
-        {pos: [1, 2/6, 4/6], uv: [1, 4/12]},
-        {pos: [0, 2/6, 5/6], uv: [0, 3/12]},
-        {pos: [1, 2/6, 5/6], uv: [1, 3/12]},
-        {pos: [0, 1/6, 5/6], uv: [0, 2/12]},
-        {pos: [1, 1/6, 5/6], uv: [1, 2/12]},
-        {pos: [0, 1/6, 6/6], uv: [0, 1/12]},
-        {pos: [1, 1/6, 6/6], uv: [1, 1/12]},
-        {pos: [0, 0/6, 6/6], uv: [0, 0/12]},
-        {pos: [1, 0/6, 6/6], uv: [1, 0/12]},
+        {pos: [-1,  3/3, -3/3], uv: [0, 12/12]},
+        {pos: [ 1,  3/3, -3/3], uv: [1, 12/12]},
+        {pos: [-1,  3/3, -2/3], uv: [0, 11/12]},
+        {pos: [ 1,  3/3, -2/3], uv: [1, 11/12]},
+        {pos: [-1,  2/3, -2/3], uv: [0, 10/12]},
+        {pos: [ 1,  2/3, -2/3], uv: [1, 10/12]},
+        {pos: [-1,  2/3, -1/3], uv: [0, 9/12]},
+        {pos: [ 1,  2/3, -1/3], uv: [1, 9/12]},
+        {pos: [-1,  1/3, -1/3], uv: [0, 8/12]},
+        {pos: [ 1,  1/3, -1/3], uv: [1, 8/12]},
+        {pos: [-1,  1/3,  0/3], uv: [0, 7/12]},
+        {pos: [ 1,  1/3,  0/3], uv: [1, 7/12]},
+        {pos: [-1,  0/3,  0/3], uv: [0, 6/12]},
+        {pos: [ 1,  0/3,  0/3], uv: [1, 6/12]},
+        {pos: [-1,  0/3,  1/3], uv: [0, 5/12]},
+        {pos: [ 1,  0/3,  1/3], uv: [1, 5/12]},
+        {pos: [-1, -1/3,  1/3], uv: [0, 4/12]},
+        {pos: [ 1, -1/3,  1/3], uv: [1, 4/12]},
+        {pos: [-1, -1/3,  2/3], uv: [0, 3/12]},
+        {pos: [ 1, -1/3,  2/3], uv: [1, 3/12]},
+        {pos: [-1, -2/3,  2/3], uv: [0, 2/12]},
+        {pos: [ 1, -2/3,  2/3], uv: [1, 2/12]},
+        {pos: [-1, -2/3,  3/3], uv: [0, 1/12]},
+        {pos: [ 1, -2/3,  3/3], uv: [1, 1/12]},
+        {pos: [-1, -3/3,  3/3], uv: [0, 0/12]},
+        {pos: [ 1, -3/3,  3/3], uv: [1, 0/12]},
     ];
     const indices = [];
     for (let i = 0; i < 12; i++) {
@@ -277,9 +277,6 @@ function createStairsGeometry(): THREE.BufferGeometry {
     for (let i = 0; i < vertices.length; i++) {
         positions.set(vertices[i].pos, i * 3);
         uvs.set(vertices[i].uv, i * 2);
-    }
-    for (let i = 0; i < vertices.length * 3; i++) {
-        positions[i] -= 0.5;
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
