@@ -25,7 +25,12 @@ struct cell {
     int32 west_door;
     int32 stairs_texture;
     int32 stairs_orientation;
-    int32 unknown[18];
+    int32 unknown[13];
+    int32 enterable;
+    int32 enterable_north;
+    int32 enterable_south;
+    int32 enterable_east;
+    int32 enterable_west;
     int32 floor_event;
     int32 north_event;
     int32 south_event;
@@ -36,7 +41,7 @@ struct cell {
         strz s;     // in sjis
     } pairs[6];     // unused in GALZOO (all zero)
     int32 unknown1;
-    int32 unknown2;
+    int32 battle_background;
 
     // the below exist only in version 13
     int32 polyobj_index;
