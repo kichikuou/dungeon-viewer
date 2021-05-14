@@ -19,7 +19,7 @@ class DungeonViewer {
         this.dirty = false;
         this.renderer.setSize(800, 600);
         $('#viewer').appendChild(this.renderer.domElement);
-        this.renderer.domElement.addEventListener('click', this.onCanvasClick.bind(this));
+        setClickHandler(this.renderer.domElement, this.onCanvasClick.bind(this));
         this.controls.enableDamping = true;
         this.controls.addEventListener('change', () => this.dirty = true);
         this.raycaster.near = this.camera.near;
@@ -122,6 +122,15 @@ class SelectionMarker extends THREE.Mesh {
         const material = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.5 });
         super(geometry, material);
     }
+}
+function setClickHandler(element, handler) {
+    let dragged = false;
+    element.addEventListener('pointerdown', () => dragged = false);
+    element.addEventListener('pointermove', () => dragged = true);
+    element.addEventListener('click', (ev) => {
+        if (!dragged)
+            handler(ev);
+    });
 }
 const dungeons = new DungeonCollection();
 let viewer;
