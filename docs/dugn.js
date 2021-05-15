@@ -229,19 +229,19 @@ export class PVS {
     }
     getVisibleCells() {
         const cells = [];
-        let i = 0;
-        let [invisibleCells, visibleCells] = this.runLengths[i++];
+        let i = 0, invisibleCells = 0, visibleCells = 0;
         for (let z = 0; z < this.dgn.sizeZ; z++) {
             for (let y = 0; y < this.dgn.sizeY; y++) {
                 for (let x = 0; x < this.dgn.sizeX; x++) {
+                    if (invisibleCells === 0 && visibleCells === 0) {
+                        [invisibleCells, visibleCells] = this.runLengths[i++];
+                    }
                     if (invisibleCells > 0) {
                         invisibleCells--;
                     }
                     else {
                         cells.push({ x, y, z });
-                        if (--visibleCells === 0) {
-                            [invisibleCells, visibleCells] = this.runLengths[i++];
-                        }
+                        visibleCells--;
                     }
                 }
             }

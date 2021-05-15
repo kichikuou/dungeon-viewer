@@ -57,6 +57,8 @@ class DungeonViewer {
         this.model = new DungeonModel(dgn, dtx, this.polyModelFactory, this.lib);
         this.scene = new THREE.Scene();
         this.scene.add(this.model);
+        if ($('#show-pvs-check').checked)
+            this.scene.add(this.visibilityMarker);
         this.camera.position.set(dgn.sizeX, dgn.sizeY * 4, 40);
         this.controls.target.set(dgn.sizeX - 1, dgn.sizeY - 1, -dgn.sizeZ - 1);
         this.dirty = true;
@@ -64,6 +66,7 @@ class DungeonViewer {
         $('#cellinfo-rance6').hidden = true;
         $('#cellinfo-galzoo').hidden = true;
         $('#show-pvs').hidden = true;
+        this.visibilityMarker.clearPVS();
     }
     onCanvasClick(evt) {
         if (!this.model) {
@@ -84,17 +87,24 @@ class DungeonViewer {
             this.visibilityMarker.clearPVS();
             return;
         }
+        this.selectCell(obj.x, obj.y, obj.z);
+    }
+    selectCell(x, y, z) {
+        if (!this.model) {
+            return;
+        }
+        const cell = this.model.dgn.cellAt(x, y, z);
         this.scene.add(this.selectionMarker);
-        this.selectionMarker.position.set(obj.x * 2, obj.y * 2, -obj.z * 2);
-        this.visibilityMarker.setPVS(this.model.dgn.pvsAt(obj.x, obj.y, obj.z));
-        const cell = obj.cell;
+        this.selectionMarker.position.set(x * 2, y * 2, z * -2);
+        this.dirty = true;
+        this.visibilityMarker.setPVS(this.model.dgn.pvsAt(x, y, z));
         // Scenario coordinates: Used in scenario files (before being transformed
         // by CDungeon::TransMapPos()). X increases from west to east, Y increases
         // from north to south, Z increases from down to up.
-        $('#scenario-coords').innerText = `(${obj.x + 1}, ${this.model.sizeZ - obj.z}, ${obj.y + 1})`;
+        $('#scenario-coords').innerText = `(${x + 1}, ${this.model.sizeZ - z}, ${y + 1})`;
         // Dungeon coordinates: Used in DrawDungeon.DLL. X increases from west
         // to east, Y increases from down to up, Z increases from south to north.
-        $('#dungeon-coords').innerText = `(${obj.x}, ${obj.y}, ${obj.z})`;
+        $('#dungeon-coords').innerText = `(${x}, ${y}, ${z})`;
         for (let i = 0; i < 35; i++) {
             $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
         }
@@ -206,6 +216,7 @@ async function handleFiles(files) {
     }
     if (!viewer) {
         viewer = new DungeonViewer(await createLib());
+        window.viewer = viewer;
         $('.usage').hidden = true;
     }
     viewer.view(dungeons, ids[0]);
