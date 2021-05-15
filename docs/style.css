@@ -20,3 +20,6 @@ td {
 .attr-value {
     text-align: right;
 }
+#show-pvs {
+    margin-left: 40px;
+}

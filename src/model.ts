@@ -19,7 +19,7 @@ export class DungeonModel extends THREE.Group {
     public sizeY: number;
     public sizeZ: number;
 
-    constructor(dgn: Dugn, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
+    constructor(readonly dgn: Dugn, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
         super();
         this.sizeX = dgn.sizeX;
         this.sizeY = dgn.sizeY;

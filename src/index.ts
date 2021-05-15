@@ -2,7 +2,9 @@ import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
 import {OrbitControls} from "https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js";
 import {DungeonCollection} from './dungeon_collection.js';
 import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
+import {PVS} from './dugn.js';
 import createLib, {LibModule} from './lib.js';
+import {Matrix4} from "https://unpkg.com/three@0.126.1/build/three.module.js";
 
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 const sjisDecoder = new TextDecoder('shift-jis');
@@ -16,6 +18,7 @@ class DungeonViewer {
     private scene: THREE.Scene | null = null;
     private model: DungeonModel | null = null;
     private selectionMarker = new SelectionMarker();
+    private visibilityMarker = new VisibilityMarker();
     private dirty = false;
 
     constructor(private lib: LibModule) {
@@ -25,6 +28,13 @@ class DungeonViewer {
         this.controls.enableDamping = true;
         this.controls.addEventListener('change', () => this.dirty = true);
         this.raycaster.near = this.camera.near;
+        $('#show-pvs-check').addEventListener('change', () => {
+            if (($('#show-pvs-check') as HTMLInputElement).checked)
+                this.scene!.add(this.visibilityMarker);
+            else
+                this.scene!.remove(this.visibilityMarker);
+            this.dirty = true;
+        });
 
         const tick = (): void => {
             requestAnimationFrame(tick);
@@ -59,6 +69,7 @@ class DungeonViewer {
         $('#cellinfo').hidden = true;
         $('#cellinfo-rance6').hidden = true;
         $('#cellinfo-galzoo').hidden = true;
+        $('#show-pvs').hidden = true;
     }
 
     private onCanvasClick(evt: MouseEvent) {
@@ -77,10 +88,12 @@ class DungeonViewer {
         }
         if (!obj) {
             this.scene!.remove(this.selectionMarker);
+            this.visibilityMarker.clearPVS();
             return;
         }
         this.scene!.add(this.selectionMarker);
         this.selectionMarker.position.set(obj.x * 2, obj.y * 2, -obj.z * 2);
+        this.visibilityMarker.setPVS(this.model.dgn.pvsAt(obj.x, obj.y, obj.z));
 
         const cell = obj.cell;
         // Scenario coordinates: Used in scenario files (before being transformed
@@ -98,6 +111,7 @@ class DungeonViewer {
         $('#cell-unknown1').innerText = cell.unknown1 + '';
         $('#cell-unknown2').innerText = cell.unknown2 + '';
         $('#cellinfo').hidden = false;
+        $('#show-pvs').hidden = false;
 
         if (cell.version == 10) {
             for (let i = 0; i < 6; i++) {
@@ -131,6 +145,28 @@ class SelectionMarker extends THREE.Mesh {
         const geometry = new THREE.BoxGeometry(2, 2, 2);
         const material = new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.5});
         super(geometry, material);
+    }
+}
+
+class VisibilityMarker extends THREE.InstancedMesh {
+    constructor() {
+        const geometry = new THREE.BoxGeometry(2, 2, 2);
+        const material = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.2});
+        super(geometry, material, 5000);
+    }
+
+    setPVS(pvs: PVS) {
+        const cells = pvs.getVisibleCells();
+        this.count = cells.length;
+        for (let i = 0; i < cells.length; i++) {
+            const c = cells[i];
+            this.setMatrixAt(i, new Matrix4().makeTranslation(c.x * 2, c.y * 2, c.z * -2));
+        }
+        this.instanceMatrix.needsUpdate = true;
+    }
+
+    clearPVS() {
+        this.count = 0;
     }
 }
 

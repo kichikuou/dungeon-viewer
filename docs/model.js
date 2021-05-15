@@ -5,6 +5,7 @@ const stairsGeometry = createStairsGeometry();
 export class DungeonModel extends THREE.Group {
     constructor(dgn, dtx, polyFactory, lib) {
         super();
+        this.dgn = dgn;
         this.sizeX = dgn.sizeX;
         this.sizeY = dgn.sizeY;
         this.sizeZ = dgn.sizeZ;
