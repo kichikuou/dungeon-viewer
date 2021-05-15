@@ -9,7 +9,22 @@ struct dugn {
     uint32 sizeZ;
     uint32 unknown[10];
     struct cell cells[sizeZ][sizeY][sizeX];
-    // unknown data follows...
+    uint8 unknown;  // must be zero
+    uint32 unknown; // must be 1
+    struct {
+        uint32 len;
+        struct PVS pvs;  // len bytes
+    } pvs_array[sizeZ][sizeY][sizeX];
+    float footer1;
+    float footer2;
+    float footer3;
+    float footer4;
+    float footer5;
+    uint32 footer6;
+
+    // the below exist only in version 13
+    float footer7;
+    uint32 footer8;  // always zero
 };
 
 struct cell {
@@ -58,6 +73,14 @@ struct cell {
     int32 roof_underside_texture;
     int32 unused;  // always -1
 };
+
+struct PVS {
+    uint32 nr_total_cells;
+    struct {
+        uint32 invisible_cells;
+        uint32 visible_cells;
+    } run_lengths[];
+};
 */
 
 export class Dugn {
@@ -66,7 +89,8 @@ export class Dugn {
     readonly sizeY: number;
     readonly sizeZ: number;
     readonly cells: Cell[] = [];
-    readonly offsetAfterCells: number;
+    readonly pvs: PVS[] = [];
+    readonly footer: number[] = [];
 
     constructor(buf: ArrayBuffer) {
         const r = new BufferReader(buf);
@@ -82,11 +106,31 @@ export class Dugn {
         for (let i = 0; i < nr_cells; i++) {
             this.cells.push(new Cell(this.version, r));
         }
-        this.offsetAfterCells = r.offset;
+        r.offset += 5;
+        for (let i = 0; i < nr_cells; i++) {
+            this.pvs.push(new PVS(this, r));
+        }
+        this.footer.push(r.readF32());
+        this.footer.push(r.readF32());
+        this.footer.push(r.readF32());
+        this.footer.push(r.readF32());
+        this.footer.push(r.readF32());
+        this.footer.push(r.readU32());
+        if (this.version == 13) {
+            this.footer.push(r.readF32());
+            this.footer.push(r.readF32());
+        }
+        if (r.offset !== r.buffer.byteLength) {
+            throw new Error('extra data at the end');
+        }
     }
 
     cellAt(x: number, y: number, z: number): Cell {
         return this.cells[((z * this.sizeY) + y) * this.sizeX + x];
+    }
+
+    pvsAt(x: number, y: number, z: number): PVS {
+        return this.pvs[((z * this.sizeY) + y) * this.sizeX + x];
     }
 }
 
@@ -176,5 +220,49 @@ export class Cell {
     }
     get roof_underside_texture(): number {
         return this.version === 13 ? this.v.getInt32(222, true) : -1;
+    }
+}
+
+export class PVS {
+    private runLengths: [number, number][] = [];
+
+    constructor(private dgn: Dugn, r: BufferReader) {
+        const len = r.readU32();
+        if (len % 8 !== 4)
+            throw new Error('unexpected PVS length');
+        const end = r.offset + len;
+        const nrCells = r.readU32();
+        if (nrCells !== dgn.sizeX * dgn.sizeY * dgn.sizeZ)
+            throw new Error('bad PVS');
+        let total = 0;
+        while (r.offset < end) {
+            const invisibleCells = r.readU32();
+            const visibleCells = r.readU32();
+            this.runLengths.push([invisibleCells, visibleCells]);
+            total += invisibleCells + visibleCells;
+        }
+        if (total !== nrCells)
+            throw new Error('broken PVS');
+    }
+
+    getVisibleCells(): {x: number, y: number, z: number}[] {
+        const cells: {x: number, y: number, z: number}[] = [];
+        let i = 0;
+        let [invisibleCells, visibleCells] = this.runLengths[i++];
+        for (let z = 0; z < this.dgn.sizeZ; z++) {
+            for (let y = 0; y < this.dgn.sizeY; y++) {
+                for (let x = 0; x < this.dgn.sizeX; x++) {
+                    if (invisibleCells > 0) {
+                        invisibleCells--;
+                    } else {
+                        cells.push({x, y, z});
+                        if (--visibleCells === 0) {
+                            [invisibleCells, visibleCells] = this.runLengths[i++];
+                        }
+                    }
+                }
+            }
+        }
+        return cells;
     }
 }
