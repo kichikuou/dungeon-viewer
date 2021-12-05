@@ -22,6 +22,7 @@ export class DungeonCollection {
         this.dtx = [];
         this.tes = [];
         this.polyobj = null;
+        this.fromDlf = false;
     }
     async addFile(file) {
         if (file.name.toLowerCase() === 'dungeondata.dlf') {
@@ -46,13 +47,14 @@ export class DungeonCollection {
                 if (tesOffset)
                     this.tes[i] = file.slice(tesOffset, tesOffset + tesLength);
             }
+            this.fromDlf = true;
             return;
         }
-        const match = /^map(\d+)\.(dgn|dtx|mrk|tes)$/.exec(file.name.toLowerCase());
+        const match = /^(field|map)(\d+)\.(dgn|dtx|mrk|tes)$/.exec(file.name.toLowerCase());
         if (match) {
             // GALZOO Island
-            const i = Number(match[1]);
-            switch (match[2]) {
+            const i = Number(match[2]);
+            switch (match[3]) {
                 case 'dgn':
                     this.dgn[i] = file;
                     break;
@@ -81,7 +83,7 @@ export class DungeonCollection {
         return ids;
     }
     async getDugn(i) {
-        return new Dugn(await readFileAsArrayBuffer(this.dgn[i]));
+        return new Dugn(await readFileAsArrayBuffer(this.dgn[i]), this.fromDlf);
     }
     async getDtex(i) {
         return new Dtex(await readFileAsArrayBuffer(this.dtx[i]));

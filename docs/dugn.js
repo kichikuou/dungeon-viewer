@@ -2,18 +2,18 @@ import { BufferReader } from './buffer.js';
 /*
 struct dugn {
     char magic[4];  // "DUGN"
-    uint32 version; // 10: Rance VI, 13: GALZOO Island
+    uint32 version; // Rance VI => 10, GALZOO Island => 13, Pastel Chime Continue => (8, 10 or 11)
     uint32 sizeX;
     uint32 sizeY;
     uint32 sizeZ;
     uint32 unknown[10];
     struct cell cells[sizeZ][sizeY][sizeX];
     uint8 unknown;  // must be zero
-    uint32 unknown; // must be 1
+    uint32 has_pvs; // 0 or 1
     struct {
         uint32 len;
         struct PVS pvs;  // len bytes
-    } pvs_array[sizeZ][sizeY][sizeX];
+    } pvs_array[has_pvs][sizeZ][sizeY][sizeX];
     float footer1;
     float footer2;
     float footer3;
@@ -21,9 +21,15 @@ struct dugn {
     float footer5;
     uint32 footer6;
 
-    // the below exist only in version 13
-    float footer7;
-    uint32 footer8;  // always zero
+    if (GALZOO) {
+        float footer7;
+        uint32 footer8;  // always zero
+    }
+    if (PastelChimeContinue && version >= 10) {
+        uint32 footer7;
+        uint32 footer8;
+        uint32 footer9;
+    }
 };
 
 struct cell {
@@ -54,23 +60,34 @@ struct cell {
         uint32 i;
         strz s;     // in sjis
     } pairs[6];     // unused in GALZOO (all zero)
-    int32 unknown1;
-    int32 battle_background;
 
-    // the below exist only in version 13
-    int32 polyobj_index;
-    float polyobj_scale;
-    float polyobj_rotationY;
-    float polyobj_rotationZ;  // always zero
-    float polyobj_rotationX;  // always zero
-    float polyobj_positionX;
-    float polyobj_positionY;
-    float polyobj_positionZ;
-    int32 roof_orientation;
-    int32 roof_texture;
-    int32 unused;  // always -1
-    int32 roof_underside_texture;
-    int32 unused;  // always -1
+    if (Rance6 || GALZOO) {
+        int32 unknown1;
+        int32 battle_background;
+    }
+    if (GALZOO) {
+        int32 polyobj_index;
+        float polyobj_scale;
+        float polyobj_rotationY;
+        float polyobj_rotationZ;  // always zero
+        float polyobj_rotationX;  // always zero
+        float polyobj_positionX;
+        float polyobj_positionY;
+        float polyobj_positionZ;
+        int32 roof_orientation;
+        int32 roof_texture;
+        int32 unused;  // always -1
+        int32 roof_underside_texture;
+        int32 unused;  // always -1
+    }
+    if (PastelChimeContinue) {
+        if (version >= 10) {
+            int32 unknown[9];
+        }
+        if (version == 11) {
+            int32 unknown[8];
+        }
+    }
 };
 
 struct PVS {
@@ -82,9 +99,9 @@ struct PVS {
 };
 */
 export class Dugn {
-    constructor(buf) {
+    constructor(buf, fromDlf) {
         this.cells = [];
-        this.pvs = [];
+        this.pvs = null;
         this.footer = [];
         const r = new BufferReader(buf);
         if (r.readFourCC() !== "DUGN") {
@@ -97,11 +114,15 @@ export class Dugn {
         r.offset += 40;
         const nr_cells = this.sizeX * this.sizeY * this.sizeZ;
         for (let i = 0; i < nr_cells; i++) {
-            this.cells.push(new Cell(this.version, r));
+            this.cells.push(new Cell(this.version, fromDlf, r));
         }
-        r.offset += 5;
-        for (let i = 0; i < nr_cells; i++) {
-            this.pvs.push(new PVS(this, r));
+        r.offset += 1;
+        const has_pvs = r.readU32() != 0;
+        if (has_pvs) {
+            this.pvs = [];
+            for (let i = 0; i < nr_cells; i++) {
+                this.pvs.push(new PVS(this, r));
+            }
         }
         this.footer.push(r.readF32());
         this.footer.push(r.readF32());
@@ -113,19 +134,27 @@ export class Dugn {
             this.footer.push(r.readF32());
             this.footer.push(r.readF32());
         }
+        if (!fromDlf && (this.version === 10 || this.version === 11)) {
+            this.footer.push(r.readU32());
+            this.footer.push(r.readU32());
+            this.footer.push(r.readU32());
+        }
         if (r.offset !== r.buffer.byteLength) {
-            throw new Error('extra data at the end');
+            throw new Error(`extra ${r.buffer.byteLength - r.offset} bytes of data at the end`);
         }
     }
     cellAt(x, y, z) {
         return this.cells[((z * this.sizeY) + y) * this.sizeX + x];
     }
     pvsAt(x, y, z) {
+        if (!this.pvs) {
+            return null;
+        }
         return this.pvs[((z * this.sizeY) + y) * this.sizeX + x];
     }
 }
 export class Cell {
-    constructor(version, r) {
+    constructor(version, fromDlf, r) {
         this.version = version;
         this.pairs = [];
         const offset = r.offset;
@@ -137,8 +166,13 @@ export class Cell {
         }
         this.offsetAfterPairs = r.offset - offset;
         switch (version) {
+            case 8:
+                break;
             case 10:
-                r.offset += 8;
+                r.offset += fromDlf ? 8 : 36;
+                break;
+            case 11:
+                r.offset += 68;
                 break;
             case 13:
                 if (this.offsetAfterPairs !== 170) {
@@ -169,7 +203,7 @@ export class Cell {
     get unknown1() {
         return this.v.getInt32(this.offsetAfterPairs, true);
     }
-    get unknown2() {
+    get buttle_background() {
         return this.v.getInt32(this.offsetAfterPairs + 4, true);
     }
     get polyobj_index() {

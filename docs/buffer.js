@@ -47,4 +47,11 @@ export class BufferReader {
         this.offset++;
         return new Uint8Array(this.view.buffer, begin, this.offset - 1 - begin);
     }
+    expectU32(expected) {
+        const val = this.readU32();
+        if (val !== expected) {
+            throw new Error(`Expected ${expected} but got ${val} at offset ${this.offset - 4}`);
+        }
+        return val;
+    }
 }

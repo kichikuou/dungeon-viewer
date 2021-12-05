@@ -97,7 +97,11 @@ class DungeonViewer {
         this.scene.add(this.selectionMarker);
         this.selectionMarker.position.set(x * 2, y * 2, z * -2);
         this.dirty = true;
-        this.visibilityMarker.setPVS(this.model.dgn.pvsAt(x, y, z));
+        const pvs = this.model.dgn.pvsAt(x, y, z);
+        if (pvs) {
+            this.visibilityMarker.setPVS(pvs);
+            $('#show-pvs').hidden = false;
+        }
         // Scenario coordinates: Used in scenario files (before being transformed
         // by CDungeon::TransMapPos()). X increases from west to east, Y increases
         // from north to south, Z increases from down to up.
@@ -108,11 +112,12 @@ class DungeonViewer {
         for (let i = 0; i < 35; i++) {
             $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
         }
-        $('#cell-unknown1').innerText = cell.unknown1 + '';
-        $('#cell-unknown2').innerText = cell.unknown2 + '';
         $('#cellinfo').hidden = false;
-        $('#show-pvs').hidden = false;
-        if (cell.version == 10) {
+        if (cell.version != 8) {
+            $('#cell-unknown1').innerText = cell.unknown1 + '';
+            $('#cell-buttlebg').innerText = cell.buttle_background + '';
+        }
+        if (cell.version != 13) {
             for (let i = 0; i < 6; i++) {
                 $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
                 $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';

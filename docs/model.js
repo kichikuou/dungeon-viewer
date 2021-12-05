@@ -1,4 +1,5 @@
 import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
+import { BufferReader } from './buffer.js';
 import { TextureType } from './dtex.js';
 const planeGeometry = new THREE.PlaneGeometry(2, 2);
 const stairsGeometry = createStairsGeometry();
@@ -155,11 +156,11 @@ class MaterialCache extends ResourceManager {
                 params.color = 0x6699FF;
             }
             else {
-                const qnt = decodeQnt(this.lib, textureData);
-                const texture = this.track(new THREE.DataTexture(qnt.buf, qnt.width, qnt.height, THREE.RGBAFormat, THREE.UnsignedByteType));
+                const image = decodeImage(this.lib, textureData);
+                const texture = this.track(image.texture);
                 texture.flipY = true;
                 params.map = texture;
-                params.transparent = qnt.hasAlpha;
+                params.transparent = image.hasAlpha;
             }
             this.materials[type][index] = this.track(new THREE.MeshBasicMaterial(params));
         }
@@ -211,9 +212,9 @@ export class PolyObjModelFactory extends ResourceManager {
     getMaterial(index) {
         if (!this.materials[index]) {
             const textureData = this.polyobj.textures[index];
-            const qnt = decodeQnt(this.lib, textureData);
-            const texture = this.track(new THREE.DataTexture(qnt.buf, qnt.width, qnt.height, THREE.RGBAFormat, THREE.UnsignedByteType));
-            const params = { map: texture, transparent: qnt.hasAlpha };
+            const image = decodeImage(this.lib, textureData);
+            const texture = this.track(image.texture);
+            const params = { map: texture, transparent: image.hasAlpha };
             this.materials[index] = this.track(new THREE.MeshBasicMaterial(params));
         }
         return this.materials[index];
@@ -264,6 +265,18 @@ function createStairsGeometry() {
     geometry.setIndex(indices);
     return geometry;
 }
+function decodeImage(lib, buf) {
+    const fmt = String.fromCharCode.apply(null, Array.from(buf.slice(0, 4)));
+    if (fmt === 'QNT\0') {
+        return decodeQnt(lib, buf);
+    }
+    else if (fmt === 'ROU\0') {
+        return decodeRou(buf);
+    }
+    else {
+        throw new Error('Unknown texture format ' + fmt);
+    }
+}
 function decodeQnt(lib, buf) {
     const ptr = lib._malloc(buf.byteLength);
     lib.HEAPU8.set(buf, ptr);
@@ -278,5 +291,53 @@ function decodeQnt(lib, buf) {
     const hasAlpha = dv.getUint32(36 + ofs, true) !== 0;
     const pixels = lib.HEAPU8.slice(decoded, decoded + width * height * 4);
     lib._free(decoded);
-    return { width, height, hasAlpha, buf: pixels };
+    const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
+    return { texture, hasAlpha };
+}
+function decodeRou(buf) {
+    const r = new BufferReader(buf.buffer);
+    r.offset = buf.byteOffset;
+    if (r.readFourCC() !== 'ROU\0') {
+        throw new Error('Not a ROU image');
+    }
+    r.expectU32(0);
+    const hdrSize = r.readU32();
+    if (hdrSize !== 0x44) {
+        throw new Error('ROU: Unexpected header size ' + hdrSize);
+    }
+    r.expectU32(0);
+    r.expectU32(0);
+    const width = r.readU32();
+    const height = r.readU32();
+    r.expectU32(24); // color bits
+    r.expectU32(0);
+    const pixels_size = r.expectU32(width * height * 3);
+    const alpha_size = r.readU32(); // 0x4000
+    while (r.offset + buf.byteOffset < hdrSize) {
+        r.expectU32(0);
+    }
+    if (buf.byteLength != hdrSize + pixels_size + alpha_size) {
+        throw new Error(`ROU: Unexpected data length. ${buf.byteLength} != ${hdrSize} + ${pixels_size} + ${alpha_size}`);
+    }
+    if (alpha_size === 0) {
+        const pixels = buf.subarray(hdrSize, hdrSize + pixels_size);
+        const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBFormat, THREE.UnsignedByteType);
+        return { texture, hasAlpha: false };
+    }
+    if (alpha_size !== width * height) {
+        throw new Error(`ROU: Unexpected alpha_size. ${alpha_size} != ${width} * ${height}`);
+    }
+    // RGB buffer + alpha buffer -> RGBA buffer
+    let rgb = hdrSize;
+    let alpha = hdrSize + pixels_size;
+    const rgba_buf = new Uint8Array(width * height * 4);
+    let rgba = 0;
+    while (rgba < width * height * 4) {
+        rgba_buf[rgba++] = buf[rgb++];
+        rgba_buf[rgba++] = buf[rgb++];
+        rgba_buf[rgba++] = buf[rgb++];
+        rgba_buf[rgba++] = buf[alpha++];
+    }
+    const texture = new THREE.DataTexture(rgba_buf, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
+    return { texture, hasAlpha: true };
 }
