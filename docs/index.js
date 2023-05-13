@@ -55,6 +55,7 @@ class DungeonViewer {
             this.model.dispose();
         }
         this.model = new DungeonModel(dgn, dtx, this.polyModelFactory, this.lib);
+        this.model.onTextureLoad = () => { this.dirty = true; };
         this.scene = new THREE.Scene();
         this.scene.add(this.model);
         if ($('#show-pvs-check').checked)

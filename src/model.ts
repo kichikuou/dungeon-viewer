@@ -19,6 +19,9 @@ export class DungeonModel extends THREE.Group {
     public sizeX: number;
     public sizeY: number;
     public sizeZ: number;
+    set onTextureLoad(handler: () => void) {
+        this.materials.onTextureLoad = handler;
+    }
 
     constructor(readonly dgn: Dugn, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
         super();
@@ -158,6 +161,7 @@ class ResourceManager {
 
 class MaterialCache extends ResourceManager {
     private materials: THREE.MeshBasicMaterial[][] = [];
+    public onTextureLoad: (() => void) | null = null;
 
     constructor(private dtx: Dtex, private lib: LibModule) {
         super();
@@ -168,17 +172,20 @@ class MaterialCache extends ResourceManager {
             this.materials[type] = [];
         if (!this.materials[type][index]) {
             const textureData = this.dtx.get(type, index);
-            const params: THREE.MeshBasicMaterialParameters = {};
+            const material = new THREE.MeshBasicMaterial();
+            this.materials[type][index] = this.track(material);
             if (!textureData) {
-                params.color = 0x6699FF;
+                material.color = new THREE.Color(0x6699FF);
             } else {
-                const image = decodeImage(this.lib, textureData);
-                const texture = this.track(image.texture);
-                texture.flipY = true;
-                params.map = texture;
-                params.transparent = image.hasAlpha;
+                decodeImage(this.lib, textureData).then((image) => {
+                    const texture = this.track(image.texture);
+                    texture.flipY = true;
+                    material.map = texture;
+                    material.transparent = image.hasAlpha;
+                    material.needsUpdate = true;
+                    if (this.onTextureLoad) this.onTextureLoad();
+                });
             }
-            this.materials[type][index] = this.track(new THREE.MeshBasicMaterial(params));
         }
         return this.materials[type][index];
     }
@@ -230,11 +237,15 @@ export class PolyObjModelFactory extends ResourceManager {
 
     private getMaterial(index: number): THREE.MeshBasicMaterial {
         if (!this.materials[index]) {
+            const material = new THREE.MeshBasicMaterial();
+            this.materials[index] = this.track(material);
             const textureData = this.polyobj.textures[index];
-            const image = decodeImage(this.lib, textureData);
-            const texture = this.track(image.texture);
-            const params = {map: texture, transparent: image.hasAlpha};
-            this.materials[index] = this.track(new THREE.MeshBasicMaterial(params));
+            decodeImage(this.lib, textureData).then((image) => {
+                const texture = this.track(image.texture);
+                material.map = texture;
+                material.transparent = image.hasAlpha;
+                material.needsUpdate = true;
+            });
         }
         return this.materials[index];
     }
@@ -286,12 +297,14 @@ function createStairsGeometry(): THREE.BufferGeometry {
     return geometry;
 }
 
-function decodeImage(lib: LibModule, buf: Uint8Array): Image {
+function decodeImage(lib: LibModule, buf: Uint8Array): Promise<Image> {
     const fmt = String.fromCharCode.apply(null, Array.from(buf.slice(0, 4)));
     if (fmt === 'QNT\0') {
-        return decodeQnt(lib, buf);
+        return Promise.resolve(decodeQnt(lib, buf));
     } else if (fmt === 'ROU\0') {
-        return decodeRou(buf);
+        return Promise.resolve(decodeRou(buf));
+    } else if (fmt === 'RIFF') {
+        return decodeWebp(buf);
     } else {
         throw new Error('Unknown texture format ' + fmt);
     }
@@ -362,4 +375,22 @@ function decodeRou(buf: Uint8Array): Image {
     }
     const texture = new THREE.DataTexture(rgba_buf, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
     return { texture, hasAlpha: true };
+}
+
+async function decodeWebp(buf: Uint8Array): Promise<Image> {
+    const decoder = new ImageDecoder({ data: buf, type: "image/webp" });
+    const image = (await decoder.decode()).image;
+    const pixels = new Uint8Array(image.allocationSize());
+    await image.copyTo(pixels);
+    const hasAlpha = image.format![3] == 'A';
+    if (image.format === 'BGRX' || image.format === 'BGRA') {
+        // BGRA -> RGBA
+        for (let i = 0; i < pixels.length; i += 4) {
+            const tmp = pixels[i];
+            pixels[i] = pixels[i + 2];
+            pixels[i + 2] = tmp;
+        }
+    }
+    const texture = new THREE.DataTexture(pixels, image.codedWidth, image.codedHeight, THREE.RGBAFormat, THREE.UnsignedByteType);
+    return { texture, hasAlpha };
 }
