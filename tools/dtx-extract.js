@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import arg from 'arg';
 import fs from 'fs';
 import path from 'path';
-import {Dtex} from '../docs/dtex.js';
+import {Dtex} from '../src/dtex.ts';
 
 const args = arg({
     '--help': Boolean,
@@ -13,7 +13,7 @@ const args = arg({
 });
 
 if (args['--help'] || args._.length !== 1) {
-    console.log('usage: node dtx-extract.js [options] <input.dtx>');
+    console.log('usage: bun dtx-extract.js [options] <input.dtx>');
     console.log('    Extract a dtx archive');
     console.log('Options:');
     console.log('    -h, --help          Print this message and exit');

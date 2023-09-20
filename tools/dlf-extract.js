@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import arg from 'arg';
 import fs from 'fs';
 import path from 'path';
-import {BufferReader} from '../docs/buffer.js';
+import {BufferReader} from '../src/buffer.ts';
 
 const args = arg({
     '--help': Boolean,
@@ -13,7 +13,7 @@ const args = arg({
 });
 
 if (args['--help'] || args._.length !== 1) {
-    console.log('usage: node dlf-extract.js [options] DungeonData.dlf');
+    console.log('usage: bun dlf-extract.js [options] DungeonData.dlf');
     console.log('    Extract a dlf archive');
     console.log('Options:');
     console.log('    -h, --help          Print this message and exit');
@@ -24,7 +24,7 @@ if (args['--help'] || args._.length !== 1) {
 const dlfHeaderSize = 8 + 100 * 3 * 8;
 const fd = fs.openSync(args._[0], 'r');
 const headerBuf = Buffer.alloc(dlfHeaderSize);
-if (fs.readSync(fd, headerBuf, 0, dlfHeaderSize) !== dlfHeaderSize)
+if (fs.readSync(fd, headerBuf, 0, dlfHeaderSize, null) !== dlfHeaderSize)
     throw new Error('read error');
 
 const r = new BufferReader(headerBuf.buffer);
