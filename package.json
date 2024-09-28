@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir docs",
-    "watch": "bun build src/index.ts --outdir docs --watch"
+    "build": "bun build src/index.ts --outdir dist",
+    "watch": "bun build src/index.ts --outdir dist --watch"
   },
   "author": "kichikuou <KichikuouChrome@gmail.com>",
   "dependencies": {
