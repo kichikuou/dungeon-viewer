@@ -1,4 +1,4 @@
-import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
+import * as THREE from "three";
 import {BufferReader} from './buffer.js';
 import {Dtex, TextureType} from './dtex.js';
 import {Dugn, Cell} from './dugn.js';

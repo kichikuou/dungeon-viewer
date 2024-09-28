@@ -1,10 +1,10 @@
-import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
-import {OrbitControls} from "https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js";
+import * as THREE from "three";
+import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {DungeonCollection} from './dungeon_collection.js';
 import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
 import {PVS} from './dugn.js';
 import createLib, {LibModule} from './lib.js';
-import {Matrix4} from "https://unpkg.com/three@0.126.1/build/three.module.js";
+import {Matrix4} from "three";
 
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 const sjisDecoder = new TextDecoder('shift-jis');

@@ -3,14 +3,6 @@
         "target": "ES2017",
         "module": "ESNext",
         "strict": true,
-        "noEmit": true,
-        "paths": {
-            "https://unpkg.com/three@0.126.1/build/three.module.js": [
-                "./node_modules/@types/three/index.d.ts"
-            ],
-            "https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js": [
-                "./node_modules/@types/three/examples/jsm/controls/OrbitControls.js"
-            ]
-        }
+        "noEmit": true
     }
 }

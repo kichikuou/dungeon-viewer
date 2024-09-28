@@ -5,13 +5,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist",
-    "watch": "bun build src/index.ts --outdir dist --watch"
+    "build": "bun build src/index.ts --outdir dist --minify --sourcemap=linked",
+    "watch": "bun build src/index.ts --outdir dist --minify --sourcemap=linked --watch"
   },
   "author": "kichikuou <KichikuouChrome@gmail.com>",
   "dependencies": {
     "@types/dom-webcodecs": "0.1.5",
     "@types/three": "^0.126.1",
-    "arg": "^5.0.0"
+    "arg": "^5.0.0",
+    "three": "^0.126.1"
   }
 }
