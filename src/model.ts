@@ -356,22 +356,29 @@ function decodeRou(buf: Uint8Array): Image {
 
     if (alpha_size === 0) {
         const pixels = buf.subarray(hdrSize, hdrSize + pixels_size);
+        // BGR -> RGB
+        for (let i = 0; i < pixels.length; i += 3) {
+            const tmp = pixels[i];
+            pixels[i] = pixels[i + 2];
+            pixels[i + 2] = tmp;
+        }
         const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBFormat, THREE.UnsignedByteType);
         return { texture, hasAlpha: false };
     }
     if (alpha_size !== width * height) {
         throw new Error(`ROU: Unexpected alpha_size. ${alpha_size} != ${width} * ${height}`);
     }
-    // RGB buffer + alpha buffer -> RGBA buffer
-    let rgb = hdrSize;
+    // BGR buffer + alpha buffer -> RGBA buffer
+    let bgr = hdrSize;
     let alpha = hdrSize + pixels_size;
     const rgba_buf = new Uint8Array(width * height * 4);
     let rgba = 0;
     while (rgba < width * height * 4) {
-        rgba_buf[rgba++] = buf[rgb++];
-        rgba_buf[rgba++] = buf[rgb++];
-        rgba_buf[rgba++] = buf[rgb++];
+        rgba_buf[rgba++] = buf[bgr + 2];
+        rgba_buf[rgba++] = buf[bgr + 1];
+        rgba_buf[rgba++] = buf[bgr];
         rgba_buf[rgba++] = buf[alpha++];
+        bgr += 3;
     }
     const texture = new THREE.DataTexture(rgba_buf, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
     return { texture, hasAlpha: true };
