@@ -19,6 +19,12 @@ export class BufferReader {
         return this.view.buffer;
     }
 
+    readU8(): number {
+        const val = this.view.getUint8(this.offset);
+        this.offset += 1;
+        return val;
+    }
+
     readU32(): number {
         const val = this.view.getUint32(this.offset, true);
         this.offset += 4;
@@ -64,5 +70,12 @@ export class BufferReader {
             throw new Error(`Expected ${expected} but got ${val} at offset ${this.offset - 4}`);
         }
         return val;
+    }
+
+    expectFourCC(expected: string): void {
+        const val = this.readFourCC();
+        if (val !== expected) {
+            throw new Error(`Expected "${expected}" but got "${val}" at offset ${this.offset - 4}`);
+        }
     }
 }

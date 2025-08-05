@@ -3,6 +3,7 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {DungeonCollection} from './dungeon_collection.js';
 import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
 import {PVS} from './dugn.js';
+import {DsaCell} from './dsa.js'
 import createLib, {LibModule} from './lib.js';
 import {Matrix4} from "three";
 
@@ -72,6 +73,7 @@ class DungeonViewer {
         $('#cellinfo').hidden = true;
         $('#cellinfo-rance6').hidden = true;
         $('#cellinfo-galzoo').hidden = true;
+        $('#cellinfo-pascha2').hidden = true;
         $('#show-pvs').hidden = true;
         this.visibilityMarker.clearPVS();
     }
@@ -126,34 +128,39 @@ class DungeonViewer {
         }
         $('#cellinfo').hidden = false;
 
-        if (cell.version != 8) {
-            $('#cell-unknown1').innerText = cell.unknown1 + '';
-            $('#cell-buttlebg').innerText = cell.buttle_background + '';
-        }
+        if (cell instanceof DsaCell) {
+            $('#cell-pascha2-walked').innerText = cell.walked + '';
+            $('#cellinfo-pascha2').hidden = false;
+        } else {
+            if (cell.version != 8) {
+                $('#cell-unknown1').innerText = cell.unknown1 + '';
+                $('#cell-buttlebg').innerText = cell.buttle_background + '';
+            }
 
-        if (cell.version != 13) {
-            for (let i = 0; i < 6; i++) {
-                $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
-                $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';
+            if (cell.version != 13) {
+                for (let i = 0; i < 6; i++) {
+                    $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
+                    $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';
+                }
+                $('#cellinfo-rance6').hidden = false;
+            } else if (cell.version == 13) {
+                $('#cell-galzoo178').innerText = cell.polyobj_index + '';
+                if (cell.polyobj_index >= 0) {
+                    const name = this.polyModelFactory!.polyobj.objects[cell.polyobj_index].name;
+                    $('#cell-galzoo178').innerText += ' (' + sjisDecoder.decode(name) + ')';
+                }
+                $('#cell-galzoo182').innerText = cell.polyobj_scale.toFixed(3);
+                $('#cell-galzoo186').innerText = cell.polyobj_rotationY.toFixed(3);
+                $('#cell-galzoo190').innerText = cell.polyobj_rotationZ.toFixed(3);
+                $('#cell-galzoo194').innerText = cell.polyobj_rotationX.toFixed(3);
+                $('#cell-galzoo198').innerText = cell.polyobj_positionX.toFixed(3);
+                $('#cell-galzoo202').innerText = cell.polyobj_positionY.toFixed(3);
+                $('#cell-galzoo206').innerText = cell.polyobj_positionZ.toFixed(3);
+                $('#cell-galzoo210').innerText = cell.roof_orientation + '';
+                $('#cell-galzoo214').innerText = cell.roof_texture + '';
+                $('#cell-galzoo222').innerText = cell.roof_underside_texture + '';
+                $('#cellinfo-galzoo').hidden = false;
             }
-            $('#cellinfo-rance6').hidden = false;
-        } else if (cell.version == 13) {
-            $('#cell-galzoo178').innerText = cell.polyobj_index + '';
-            if (cell.polyobj_index >= 0) {
-                const name = this.polyModelFactory!.polyobj.objects[cell.polyobj_index].name;
-                $('#cell-galzoo178').innerText += ' (' + sjisDecoder.decode(name) + ')';
-            }
-            $('#cell-galzoo182').innerText = cell.polyobj_scale.toFixed(3);
-            $('#cell-galzoo186').innerText = cell.polyobj_rotationY.toFixed(3);
-            $('#cell-galzoo190').innerText = cell.polyobj_rotationZ.toFixed(3);
-            $('#cell-galzoo194').innerText = cell.polyobj_rotationX.toFixed(3);
-            $('#cell-galzoo198').innerText = cell.polyobj_positionX.toFixed(3);
-            $('#cell-galzoo202').innerText = cell.polyobj_positionY.toFixed(3);
-            $('#cell-galzoo206').innerText = cell.polyobj_positionZ.toFixed(3);
-            $('#cell-galzoo210').innerText = cell.roof_orientation + '';
-            $('#cell-galzoo214').innerText = cell.roof_texture + '';
-            $('#cell-galzoo222').innerText = cell.roof_underside_texture + '';
-            $('#cellinfo-galzoo').hidden = false;
         }
     }
 }

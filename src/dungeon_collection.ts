@@ -1,5 +1,6 @@
 import {Dtex} from './dtex.js';
 import {Dugn} from './dugn.js';
+import {Dsa} from './dsa.js';
 import {PolyObj} from './polyobj.js';
 import {BufferReader, readFileAsArrayBuffer} from './buffer.js';
 
@@ -22,6 +23,7 @@ export class DungeonCollection {
     private dgn: Blob[] = [];
     private dtx: Blob[] = [];
     private tes: Blob[] = [];
+    private dsa: Blob[] = [];
     private polyobj: Blob | null = null;
     private fromDlf = false;
 
@@ -51,7 +53,7 @@ export class DungeonCollection {
             this.fromDlf = true;
             return;
         }
-        const match = /^(field|map)(\d+)\.(dgn|dtx|mrk|tes)$/.exec(file.name.toLowerCase());
+        const match = /^(field|map|\d+p2dgn)(\d+)\.(dgn|dtx|mrk|tes|dsa)$/.exec(file.name.toLowerCase());
         if (match) {
             // GALZOO Island
             const i = Number(match[2]);
@@ -64,6 +66,9 @@ export class DungeonCollection {
                 break;
             case 'tes':
                 this.tes[i] = file;
+                break;
+            case 'dsa':
+                this.dsa[i] = file;
                 break;
             }
             return;
@@ -78,14 +83,17 @@ export class DungeonCollection {
 
     getIds(): number[] {
         const ids = [];
-        for (let i = 0; i < this.dgn.length; i++) {
-            if (this.dgn[i] && this.dtx[i])
+        for (let i = 0; i < this.dtx.length; i++) {
+            if ((this.dgn[i] || this.dsa[i]) && this.dtx[i])
                 ids.push(i);
         }
         return ids;
     }
 
-    async getDugn(i: number): Promise<Dugn> {
+    async getDugn(i: number): Promise<Dugn | Dsa> {
+        if (this.dsa[i]) {
+            return new Dsa(await readFileAsArrayBuffer(this.dsa[i]));
+        }
         return new Dugn(await readFileAsArrayBuffer(this.dgn[i]), this.fromDlf);
     }
 

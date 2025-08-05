@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {BufferReader} from './buffer.js';
 import {Dtex, TextureType} from './dtex.js';
 import {Dugn, Cell} from './dugn.js';
+import {Dsa, DsaCell} from './dsa.js';
 import {PolyObj} from './polyobj.js';
 import {LibModule} from './lib.js';
 
@@ -23,7 +24,7 @@ export class DungeonModel extends THREE.Group {
         this.materials.onTextureLoad = handler;
     }
 
-    constructor(readonly dgn: Dugn, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
+    constructor(readonly dgn: Dugn | Dsa, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
         super();
         this.sizeX = dgn.sizeX;
         this.sizeY = dgn.sizeY;
@@ -45,7 +46,7 @@ export class DungeonModel extends THREE.Group {
 }
 
 export class CellModel extends THREE.Group {
-    constructor(public x: number, public y: number, public z: number, public cell: Cell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
+    constructor(public x: number, public y: number, public z: number, public cell: Cell | DsaCell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
         const [wx, wy, wz] = [x * 2, y * 2, -z * 2];
         if (cell.floor_texture >= 0) {
