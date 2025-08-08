@@ -11,8 +11,8 @@
   "author": "kichikuou <KichikuouChrome@gmail.com>",
   "dependencies": {
     "@types/dom-webcodecs": "0.1.5",
-    "@types/three": "^0.126.1",
+    "@types/three": "^0.135.0",
     "arg": "^5.0.0",
-    "three": "^0.126.1"
+    "three": "^0.135.0"
   }
 }
