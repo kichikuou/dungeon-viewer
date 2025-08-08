@@ -1,13 +1,6 @@
 import {BufferReader} from './buffer.js';
 
-export enum TextureType {
-    Wall = 0,
-    Floor = 1,
-    Ceiling = 2,
-    Stairs = 3,
-    Door = 4,
-    SkyBox = 5,
-}
+export type TextureType = 'wall' | 'floor' | 'ceiling' | 'stairs' | 'door' | 'skybox' | 'light';
 
 /*
 struct dtex {
@@ -27,6 +20,7 @@ struct dtex {
 
 export class Dtex {
     private data: Uint8Array[][] = [];
+    private version: number;
     readonly nr_rows: number;
     readonly nr_cols: number;
 
@@ -35,8 +29,8 @@ export class Dtex {
         if (r.readFourCC() !== "DTEX") {
             throw new Error('not a DTEX');
         }
-        const version = r.readU32();
-        if (version !== 0 && version !== 1) {
+        this.version = r.readU32();
+        if (this.version !== 0 && this.version !== 1) {
             throw new Error('unknown DTEX version');
         }
         this.nr_rows = r.readU32();
@@ -56,7 +50,22 @@ export class Dtex {
         }
     }
 
-    get(row: number, col: number): Uint8Array {
-        return this.data[row][col];
+    get(type: TextureType, col: number): Uint8Array | undefined {
+        switch (type) {
+        case 'wall':
+            return this.data[0][col];
+        case 'floor':
+            return this.data[1][col];
+        case 'ceiling':
+            return this.data[2][col];
+        case 'stairs':
+            return this.data[3][col];
+        case 'door':
+            return this.data[4][col];
+        case 'skybox':
+            return this.data[5][col];
+        case 'light':
+            return this.data[this.version === 0 ? 6 : 7][col];
+        }
     }
 }

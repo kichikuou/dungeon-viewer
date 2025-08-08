@@ -12,7 +12,7 @@ interface Disposable {
     dispose(): void;
 }
 
-const planeGeometry = new THREE.PlaneGeometry(2, 2);
+const planeGeometry = createPlaneGeometry();
 const stairsGeometry = createStairsGeometry();
 
 export class DungeonModel extends THREE.Group {
@@ -50,56 +50,56 @@ export class CellModel extends THREE.Group {
         super();
         const [wx, wy, wz] = [x * 2, y * 2, -z * 2];
         if (cell.floor_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Floor, cell.floor_texture));
+            const plane = this.addPlane(materials.get('floor', cell.floor_texture, cell.shadow_tex_floor));
             plane.rotation.x = Math.PI / -2;
             plane.position.set(wx, wy - 1, wz);
         }
         if (cell.ceiling_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Ceiling, cell.ceiling_texture));
+            const plane = this.addPlane(materials.get('ceiling', cell.ceiling_texture, cell.shadow_tex_ceiling));
             plane.rotation.x = Math.PI / 2;
             plane.rotation.z = Math.PI;
             plane.position.set(wx, wy + 1, wz);
         }
         if (cell.north_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Wall, cell.north_texture));
+            const plane = this.addPlane(materials.get('wall', cell.north_texture, cell.shadow_tex_north));
             plane.position.set(wx, wy, wz - 1);
         }
         if (cell.south_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Wall, cell.south_texture));
+            const plane = this.addPlane(materials.get('wall', cell.south_texture, cell.shadow_tex_south));
             plane.rotation.y = Math.PI;
             plane.position.set(wx, wy, wz + 1);
         }
         if (cell.east_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Wall, cell.east_texture));
+            const plane = this.addPlane(materials.get('wall', cell.east_texture, cell.shadow_tex_east));
             plane.rotation.y = Math.PI / -2;
             plane.position.set(wx + 1, wy, wz);
         }
         if (cell.west_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Wall, cell.west_texture));
+            const plane = this.addPlane(materials.get('wall', cell.west_texture, cell.shadow_tex_west));
             plane.rotation.y = Math.PI / 2;
             plane.position.set(wx - 1, wy, wz);
         }
         if (cell.north_door >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Door, cell.north_door));
+            const plane = this.addPlane(materials.get('door', cell.north_door));
             plane.position.set(wx, wy, wz - 1);
         }
         if (cell.south_door >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Door, cell.south_door));
+            const plane = this.addPlane(materials.get('door', cell.south_door));
             plane.rotation.y = Math.PI;
             plane.position.set(wx, wy, wz + 1);
         }
         if (cell.east_door >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Door, cell.east_door));
+            const plane = this.addPlane(materials.get('door', cell.east_door));
             plane.rotation.y = Math.PI / -2;
             plane.position.set(wx + 1, wy, wz);
         }
         if (cell.west_door >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Door, cell.west_door));
+            const plane = this.addPlane(materials.get('door', cell.west_door));
             plane.rotation.y = Math.PI / 2;
             plane.position.set(wx - 1, wy, wz);
         }
         if (cell.stairs_texture >= 0) {
-            const stairs = this.addStairs(materials.get(TextureType.Stairs, cell.stairs_texture));
+            const stairs = this.addStairs(materials.get('stairs', cell.stairs_texture));
             stairs.position.set(wx, wy, wz);
             stairs.rotation.y = Math.PI / 2 * cell.stairs_orientation;
         }
@@ -114,7 +114,7 @@ export class CellModel extends THREE.Group {
             this.add(obj);
         }
         if (cell.roof_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_texture));
+            const plane = this.addPlane(materials.get('stairs', cell.roof_texture));
             plane.scale.y = Math.sqrt(2);
             plane.position.set(wx, wy, wz);
             plane.rotation.y = Math.PI / 2 * cell.roof_orientation;
@@ -122,7 +122,7 @@ export class CellModel extends THREE.Group {
             plane.rotation.order = "ZYX";
         }
         if (cell.roof_underside_texture >= 0) {
-            const plane = this.addPlane(materials.get(TextureType.Stairs, cell.roof_underside_texture));
+            const plane = this.addPlane(materials.get('stairs', cell.roof_underside_texture));
             plane.scale.y = Math.sqrt(2);
             plane.position.set(wx, wy, wz);
             plane.rotation.y = Math.PI + Math.PI / 2 * cell.roof_orientation;
@@ -161,34 +161,72 @@ class ResourceManager {
 }
 
 class MaterialCache extends ResourceManager {
-    private materials: THREE.MeshBasicMaterial[][] = [];
+    private materials = new Map<string, THREE.MeshBasicMaterial>();
+    private textures = new Map<string, Promise<Image>>();
     public onTextureLoad: (() => void) | null = null;
 
     constructor(private dtx: Dtex, private lib: LibModule) {
         super();
     }
 
-    get(type: number, index: number): THREE.MeshBasicMaterial {
-        if (!this.materials[type])
-            this.materials[type] = [];
-        if (!this.materials[type][index]) {
-            const textureData = this.dtx.get(type, index);
-            const material = new THREE.MeshBasicMaterial();
-            this.materials[type][index] = this.track(material);
-            if (!textureData) {
-                material.color = new THREE.Color(0x6699FF);
-            } else {
-                decodeImage(this.lib, textureData).then((image) => {
-                    const texture = this.track(image.texture);
-                    texture.flipY = true;
-                    material.map = texture;
-                    material.transparent = image.hasAlpha;
-                    material.needsUpdate = true;
-                    if (this.onTextureLoad) this.onTextureLoad();
-                });
-            }
+    private getTexture(type: TextureType, index: number): Promise<Image> | null {
+        if (index < 0) {
+            return null;
         }
-        return this.materials[type][index];
+        const key = `${type}:${index}`;
+        let promise = this.textures.get(key);
+        if (promise) {
+            return promise;
+        }
+
+        const textureData = this.dtx.get(type, index);
+        if (!textureData) {
+            return null;
+        }
+
+        promise = decodeImage(this.lib, textureData).then(image => {
+            this.track(image.texture);
+            return image;
+        });
+        this.textures.set(key, promise);
+        return promise;
+    }
+
+    get(type: TextureType, index: number, shadow_index?: number): THREE.MeshBasicMaterial {
+        if (shadow_index === undefined) {
+            shadow_index = -1;
+        }
+        const key = `${type}:${index}:${shadow_index}`;
+        let cached = this.materials.get(key);
+        if (cached) return cached;
+
+        const material = new THREE.MeshBasicMaterial();
+        this.materials.set(key, this.track(material));
+
+        const imagePromise = this.getTexture(type, index);
+        if (!imagePromise) {
+            material.color = new THREE.Color(0x6699FF);
+        } else {
+            imagePromise.then((image) => {
+                const texture = image.texture;
+                texture.flipY = true;
+                material.map = texture;
+                material.transparent = image.hasAlpha;
+                material.needsUpdate = true;
+                if (this.onTextureLoad) this.onTextureLoad();
+            });
+        }
+
+        const lightMapPromise = this.getTexture('light', shadow_index);
+        if (lightMapPromise) {
+            lightMapPromise.then((image) => {
+                const texture = image.texture;
+                texture.flipY = true;
+                material.lightMap = texture;
+                material.needsUpdate = true;
+            });
+        }
+        return material;
     }
 }
 
@@ -250,6 +288,12 @@ export class PolyObjModelFactory extends ResourceManager {
         }
         return this.materials[index];
     }
+}
+
+function createPlaneGeometry(): THREE.PlaneGeometry {
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    geometry.setAttribute('uv2', new THREE.BufferAttribute(geometry.attributes.uv.array, 2));
+    return geometry;
 }
 
 function createStairsGeometry(): THREE.BufferGeometry {
