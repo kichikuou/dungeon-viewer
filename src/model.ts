@@ -322,10 +322,13 @@ function decodeQnt(lib: LibModule, buf: Uint8Array): Image {
     const ofs = dv.getUint32(4, true) === 0 ? 0 : 4;
     const width = dv.getUint32(16 + ofs, true);
     const height = dv.getUint32(20 + ofs, true);
+    const hasPixel = dv.getUint32(32 + ofs, true) !== 0;
     const hasAlpha = dv.getUint32(36 + ofs, true) !== 0;
-    const pixels: Uint8Array = lib.memget(decoded, width * height * 4);
+    const size = width * height * (hasPixel ? 4 : 1);
+    const pixels: Uint8Array = lib.memget(decoded, size);
     lib.free(decoded);
-    const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBAFormat, THREE.UnsignedByteType);
+    const format = hasPixel ? THREE.RGBAFormat : THREE.LuminanceFormat;
+    const texture = new THREE.DataTexture(pixels, width, height, format, THREE.UnsignedByteType);
     return { texture, hasAlpha };
 }
 
@@ -346,8 +349,14 @@ function decodeRou(buf: Uint8Array): Image {
     const height = r.readU32();
     r.expectU32(24);  // color bits
     r.expectU32(0);
-    const pixels_size = r.expectU32(width * height * 3);
+    const pixels_size = r.readU32();
     const alpha_size = r.readU32();  // 0x4000
+    if (pixels_size && pixels_size !== width * height * 3) {
+        throw new Error(`ROU: Unexpected pixels_size. ${pixels_size} != ${width} * ${height} * 3`);
+    }
+    if (alpha_size && alpha_size !== width * height) {
+        throw new Error(`ROU: Unexpected alpha_size. ${alpha_size} != ${width} * ${height}`);
+    }
     while (r.offset + buf.byteOffset < hdrSize) {
         r.expectU32(0);
     }
@@ -355,19 +364,25 @@ function decodeRou(buf: Uint8Array): Image {
         throw new Error(`ROU: Unexpected data length. ${buf.byteLength} != ${hdrSize} + ${pixels_size} + ${alpha_size}`);
     }
 
+    if (pixels_size === 0) {
+        const alpha = buf.subarray(hdrSize, hdrSize + alpha_size);
+        const texture = new THREE.DataTexture(alpha, width, height, THREE.LuminanceFormat, THREE.UnsignedByteType);
+        return { texture, hasAlpha: true };
+    }
     if (alpha_size === 0) {
         const pixels = buf.subarray(hdrSize, hdrSize + pixels_size);
         // BGR -> RGB
-        for (let i = 0; i < pixels.length; i += 3) {
-            const tmp = pixels[i];
-            pixels[i] = pixels[i + 2];
-            pixels[i + 2] = tmp;
+        let bgr = hdrSize;
+        const rgb_buf = new Uint8Array(width * height * 3);
+        let rgb = 0;
+        while (rgb < width * height * 3) {
+            rgb_buf[rgb++] = buf[bgr + 2];
+            rgb_buf[rgb++] = buf[bgr + 1];
+            rgb_buf[rgb++] = buf[bgr];
+            bgr += 3;
         }
-        const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBFormat, THREE.UnsignedByteType);
+        const texture = new THREE.DataTexture(rgb_buf, width, height, THREE.RGBFormat, THREE.UnsignedByteType);
         return { texture, hasAlpha: false };
-    }
-    if (alpha_size !== width * height) {
-        throw new Error(`ROU: Unexpected alpha_size. ${alpha_size} != ${width} * ${height}`);
     }
     // BGR buffer + alpha buffer -> RGBA buffer
     let bgr = hdrSize;

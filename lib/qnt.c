@@ -147,6 +147,23 @@ static void unfilter(uint8_t *pixels, int width, int height) {
 	}
 }
 
+static void unfilter_alpha(uint8_t *pixels, int width, int height) {
+	for (int x = 1; x < width; x++) {
+		pixels[x] = pixels[x-1] - pixels[x];
+	}
+	for (int y = 1; y < height; y++) {
+		uint8_t *row = pixels + y * width;
+		uint8_t *prevrow = row - width;
+		row[0] = prevrow[0] - row[0];
+
+		for (int x = 1; x < width; x++) {
+			int up = prevrow[x];
+			int left = row[x-1];
+			row[x] = ((up + left) >> 1) - row[x];
+		}
+	}
+}
+
 static void merge_alpha_channel(uint8_t *pixels, uint8_t *alpha, int width, int height) {
 	for (int y = 0; y < height; y++) {
 		uint8_t *dst = pixels + y * width * 4 + 3;
@@ -167,6 +184,18 @@ uint8_t *qnt_extract(const uint8_t *buf) {
 		fprintf(stderr, "not a QNT file\n");
 #endif
 		return NULL;
+	}
+
+	if (qnt.pixel_size == 0 && qnt.alpha_size != 0) {
+		uint8_t *alpha = extract_alpha(&qnt, buf + qnt.header_size + qnt.pixel_size);
+		if (!alpha) {
+#ifndef NDEBUG
+			fprintf(stderr, "broken alpha image\n");
+#endif
+			return NULL;
+		}
+		unfilter_alpha(alpha, qnt.width, qnt.height);
+		return alpha;
 	}
 
 	uint8_t *pixels = extract_pixels(&qnt, buf + qnt.header_size);
