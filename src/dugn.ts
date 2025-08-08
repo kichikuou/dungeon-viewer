@@ -214,6 +214,12 @@ export class Cell {
     get west_door(): number { return this.getAttr(9); }
     get stairs_texture(): number { return this.getAttr(10); }
     get stairs_orientation(): number { return this.getAttr(11); }
+    get shadow_tex_floor(): number { return this.getAttr(12); }
+    get shadow_tex_ceiling(): number { return this.getAttr(13); }
+    get shadow_tex_north(): number { return this.getAttr(14); }
+    get shadow_tex_south(): number { return this.getAttr(15); }
+    get shadow_tex_east(): number { return this.getAttr(16); }
+    get shadow_tex_west(): number { return this.getAttr(17); }
 
     get unknown1(): number {
         return this.v.getInt32(this.offsetAfterPairs, true);

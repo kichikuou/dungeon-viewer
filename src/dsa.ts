@@ -244,6 +244,12 @@ export class DsaCell {
         case 9: return this.west_door;
         case 10: return this.stairs_texture;
         case 11: return this.stairs_orientation;
+        case 12: return this.shadow_tex_floor;
+        case 13: return this.shadow_tex_ceiling;
+        case 14: return this.shadow_tex_north;
+        case 15: return this.shadow_tex_south;
+        case 16: return this.shadow_tex_east;
+        case 17: return this.shadow_tex_west;
         default: return 0;
         }
     }
