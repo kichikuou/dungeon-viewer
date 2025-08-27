@@ -301,6 +301,7 @@ export class Dsa {
         console.log(this.dsd);
     }
 
+    get isField(): boolean { return true; }
     get sizeX(): number { return this.dsd['xyzMapSize']['x']; }
     get sizeY(): number { return this.dsd['xyzMapSize']['y']; }
     get sizeZ(): number { return this.dsd['xyzMapSize']['z']; }

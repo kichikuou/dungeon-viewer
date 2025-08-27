@@ -179,9 +179,10 @@ class DungeonViewer {
 
 class SelectionMarker extends THREE.Mesh {
     constructor() {
-        const geometry = new THREE.BoxGeometry(2, 2, 2);
+        const geometry = new THREE.BoxGeometry(1.99, 1.99, 1.99);
         const material = new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.5});
         super(geometry, material);
+        this.renderOrder = 1;
     }
 }
 

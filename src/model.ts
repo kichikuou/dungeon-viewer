@@ -33,8 +33,7 @@ export class DungeonModel extends THREE.Group {
         for (let z = 0; z < dgn.sizeZ; z++) {
             for (let y = 0; y < dgn.sizeY; y++) {
                 for (let x = 0; x < dgn.sizeX; x++) {
-                    const cell = dgn.cellAt(x, y, z);
-                    this.add(new CellModel(x, y, z, cell, this.materials, polyFactory));
+                    this.add(new CellModel(dgn, x, y, z, this.materials, polyFactory));
                 }
             }
         }
@@ -46,8 +45,12 @@ export class DungeonModel extends THREE.Group {
 }
 
 export class CellModel extends THREE.Group {
-    constructor(public x: number, public y: number, public z: number, public cell: Cell | DsaCell, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
+    cell: Cell | DsaCell;
+
+    constructor(dgn: Dugn | Dsa, public x: number, public y: number, public z: number, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
+
+        const cell = this.cell = dgn.cellAt(x, y, z);
         const [wx, wy, wz] = [x * 2, y * 2, -z * 2];
         if (cell.floor_texture >= 0) {
             const plane = this.addPlane(materials.get('floor', cell.floor_texture, cell.shadow_tex_floor));
@@ -56,9 +59,17 @@ export class CellModel extends THREE.Group {
         }
         if (cell.ceiling_texture >= 0) {
             const plane = this.addPlane(materials.get('ceiling', cell.ceiling_texture, cell.shadow_tex_ceiling));
-            plane.rotation.x = Math.PI / 2;
-            plane.rotation.z = Math.PI;
-            plane.position.set(wx, wy + 1, wz);
+            if (dgn.isField) {
+                // Make it a billboard.
+                plane.position.set(wx, wy, wz);
+                plane.onBeforeRender = (_renderer, _scene, camera) => {
+                    plane.quaternion.copy(camera.quaternion);
+                };
+            } else {
+                plane.rotation.x = Math.PI / 2;
+                plane.rotation.z = Math.PI;
+                plane.position.set(wx, wy + 1, wz);
+            }
         }
         if (cell.north_texture >= 0) {
             const plane = this.addPlane(materials.get('wall', cell.north_texture, cell.shadow_tex_north));
@@ -212,6 +223,7 @@ class MaterialCache extends ResourceManager {
                 texture.flipY = true;
                 material.map = texture;
                 material.transparent = image.hasAlpha;
+                material.alphaTest = 0.01;
                 material.needsUpdate = true;
                 if (this.onTextureLoad) this.onTextureLoad();
             });
