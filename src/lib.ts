@@ -3,7 +3,7 @@ export interface LibModule {
     free(ptr: number): void;
     qnt_extract(ptr: number): number;
     memset: (dst: number, src: Uint8Array) => void;
-    memget: (ptr: number, len: number) => Uint8Array;
+    memget: (ptr: number, len: number) => Uint8Array<ArrayBuffer>;
 }
 
 export default async function createModule(): Promise<LibModule> {

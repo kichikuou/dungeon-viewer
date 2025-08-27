@@ -342,7 +342,7 @@ function createStairsGeometry(): THREE.BufferGeometry {
     return geometry;
 }
 
-function decodeImage(lib: LibModule, buf: Uint8Array): Promise<Image> {
+function decodeImage(lib: LibModule, buf: Uint8Array<ArrayBuffer>): Promise<Image> {
     const fmt = String.fromCharCode.apply(null, Array.from(buf.slice(0, 4)));
     if (fmt === 'QNT\0') {
         return Promise.resolve(decodeQnt(lib, buf));
@@ -369,14 +369,14 @@ function decodeQnt(lib: LibModule, buf: Uint8Array): Image {
     const hasPixel = dv.getUint32(32 + ofs, true) !== 0;
     const hasAlpha = dv.getUint32(36 + ofs, true) !== 0;
     const size = width * height * (hasPixel ? 4 : 1);
-    const pixels: Uint8Array = lib.memget(decoded, size);
+    const pixels = lib.memget(decoded, size);
     lib.free(decoded);
     const format = hasPixel ? THREE.RGBAFormat : THREE.LuminanceFormat;
     const texture = new THREE.DataTexture(pixels, width, height, format, THREE.UnsignedByteType);
     return { texture, hasAlpha };
 }
 
-function decodeRou(buf: Uint8Array): Image {
+function decodeRou(buf: Uint8Array<ArrayBuffer>): Image {
     const r = new BufferReader(buf.buffer);
     r.offset = buf.byteOffset;
     if (r.readFourCC() !== 'ROU\0') {

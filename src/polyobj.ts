@@ -39,7 +39,7 @@ struct Object {
 */
 
 export class PolyObj {
-    readonly textures: Uint8Array[] = [];
+    readonly textures: Uint8Array<ArrayBuffer>[] = [];
     readonly objects: Object[] = [];
 
     constructor(buf: ArrayBuffer) {

@@ -19,7 +19,7 @@ struct dtex {
 */
 
 export class Dtex {
-    private data: Uint8Array[][] = [];
+    private data: Uint8Array<ArrayBuffer>[][] = [];
     private version: number;
     readonly nr_rows: number;
     readonly nr_cols: number;
@@ -50,7 +50,7 @@ export class Dtex {
         }
     }
 
-    get(type: TextureType, col: number): Uint8Array | undefined {
+    get(type: TextureType, col: number): Uint8Array<ArrayBuffer> | undefined {
         switch (type) {
         case 'wall':
             return this.data[0][col];

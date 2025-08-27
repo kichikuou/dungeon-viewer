@@ -8,7 +8,7 @@ export function readFileAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
 }
 
 export class BufferReader {
-    private view: DataView;
+    private view: DataView<ArrayBuffer>;
     public offset = 0;
 
     constructor(buf: ArrayBuffer) {
@@ -49,13 +49,13 @@ export class BufferReader {
         return String.fromCharCode.apply(null, Array.from(fourcc));
     }
 
-    readBytes(len: number): Uint8Array {
+    readBytes(len: number) {
         const bytes = new Uint8Array(this.view.buffer, this.offset, len);
         this.offset += len;
         return bytes;
     }
 
-    readStrZ(): Uint8Array {
+    readStrZ() {
         const begin = this.offset;
         while (this.view.getUint8(this.offset) !== 0) {
             this.offset++;
