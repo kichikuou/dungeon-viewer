@@ -151,6 +151,44 @@ function readArrayStruct(r: BufferReader) {
 }
 
 export class DsaCell {
+    static attributes = [
+        'floor_texture',
+        'ceiling_texture',
+        'north_texture',
+        'south_texture',
+        'east_texture',
+        'west_texture',
+        'north_door',
+        'south_door',
+        'east_door',
+        'west_door',
+        'stairs_texture',
+        'stairs_orientation',
+        'shadow_tex_floor',
+        'shadow_tex_ceiling',
+        'shadow_tex_north',
+        'shadow_tex_south',
+        'shadow_tex_east',
+        'shadow_tex_west',
+        'shadow_tex_door_north',
+        'shadow_tex_door_south',
+        'shadow_tex_door_east',
+        'shadow_tex_door_west',
+        'shadow_tex_stairs',
+    ] as const;
+
+    static pascha2Attributes = [
+        'door_lock_north',
+        'door_lock_west',
+        'door_lock_south',
+        'door_lock_east',
+        'door_angle_north',
+        'door_angle_west',
+        'door_angle_south',
+        'door_angle_east',
+        'walked',
+    ] as const;
+
     readonly floor_texture: number;
     readonly ceiling_texture: number;
     readonly north_texture: number;
@@ -173,15 +211,15 @@ export class DsaCell {
     readonly shadow_tex_door_south: number;
     readonly shadow_tex_door_east: number;
     readonly shadow_tex_door_west: number;
-    readonly unknown: number;
-    readonly north_door_lock: number;
-    readonly west_door_lock: number;
-    readonly south_door_lock: number;
-    readonly east_door_lock: number;
-    readonly north_door_angle: number;
-    readonly west_door_angle: number;
-    readonly south_door_angle: number;
-    readonly east_door_angle: number;
+    readonly shadow_tex_stairs: number;
+    readonly door_lock_north: number;
+    readonly door_lock_west: number;
+    readonly door_lock_south: number;
+    readonly door_lock_east: number;
+    readonly door_angle_north: number;
+    readonly door_angle_west: number;
+    readonly door_angle_south: number;
+    readonly door_angle_east: number;
     readonly walked: number;
 
     constructor(r: BufferReader) {
@@ -207,52 +245,28 @@ export class DsaCell {
         this.shadow_tex_door_south = r.readS32();
         this.shadow_tex_door_east = r.readS32();
         this.shadow_tex_door_west = r.readS32();
-        this.unknown = r.readS32();
-        this.north_door_lock = r.readS32();
-        this.west_door_lock = r.readS32();
-        this.south_door_lock = r.readS32();
-        this.east_door_lock = r.readS32();
-        this.north_door_angle = r.readF32();
-        this.west_door_angle = r.readF32();
-        this.south_door_angle = r.readF32();
-        this.east_door_angle = r.readF32();
+        this.shadow_tex_stairs = r.readS32();
+        this.door_lock_north = r.readS32();
+        this.door_lock_west = r.readS32();
+        this.door_lock_south = r.readS32();
+        this.door_lock_east = r.readS32();
+        this.door_angle_north = r.readF32();
+        this.door_angle_west = r.readF32();
+        this.door_angle_south = r.readF32();
+        this.door_angle_east = r.readF32();
         this.walked = r.readU32();
     }
     get polyobj_index(): number { return -1; }
-    get polyobj_scale(): number { return 1; }
-    get polyobj_rotationX(): number { return 0; }
-    get polyobj_rotationY(): number { return 0; }
-    get polyobj_rotationZ(): number { return 0; }
-    get polyobj_positionX(): number { return 0; }
-    get polyobj_positionY(): number { return 0; }
-    get polyobj_positionZ(): number { return 0; }
+    get polyobj_mag(): number { return 1; }
+    get polyobj_rotate_b(): number { return 0; }
+    get polyobj_rotate_h(): number { return 0; }
+    get polyobj_rotate_p(): number { return 0; }
+    get polyobj_offset_x(): number { return 0; }
+    get polyobj_offset_y(): number { return 0; }
+    get polyobj_offset_z(): number { return 0; }
     get roof_orientation(): number { return -1; }
     get roof_texture(): number { return -1; }
     get roof_underside_texture(): number { return -1; }
-
-    getAttr(n: number): number {
-        switch (n) {
-        case 0: return this.floor_texture;
-        case 1: return this.ceiling_texture;
-        case 2: return this.north_texture;
-        case 3: return this.south_texture;
-        case 4: return this.east_texture;
-        case 5: return this.west_texture;
-        case 6: return this.north_door;
-        case 7: return this.south_door;
-        case 8: return this.east_door;
-        case 9: return this.west_door;
-        case 10: return this.stairs_texture;
-        case 11: return this.stairs_orientation;
-        case 12: return this.shadow_tex_floor;
-        case 13: return this.shadow_tex_ceiling;
-        case 14: return this.shadow_tex_north;
-        case 15: return this.shadow_tex_south;
-        case 16: return this.shadow_tex_east;
-        case 17: return this.shadow_tex_west;
-        default: return 0;
-        }
-    }
 }
 
 export class Dsa {

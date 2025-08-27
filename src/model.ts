@@ -105,11 +105,11 @@ export class CellModel extends THREE.Group {
         }
         if (polyFactory && cell.polyobj_index >= 0) {
             const obj = polyFactory.createModel(cell.polyobj_index);
-            obj.scale.set(cell.polyobj_scale, cell.polyobj_scale, cell.polyobj_scale);
-            obj.rotation.y = cell.polyobj_rotationY * Math.PI / -180;
-            const posX = wx + cell.polyobj_positionX;
-            const posY = wy - 1 + cell.polyobj_positionY;
-            const posZ = wz - cell.polyobj_positionZ;
+            obj.scale.set(cell.polyobj_mag, cell.polyobj_mag, cell.polyobj_mag);
+            obj.rotation.y = cell.polyobj_rotate_h * Math.PI / -180;
+            const posX = wx + cell.polyobj_offset_x;
+            const posY = wy - 1 + cell.polyobj_offset_y;
+            const posZ = wz - cell.polyobj_offset_z;
             obj.position.set(posX, posY, posZ);
             this.add(obj);
         }

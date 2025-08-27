@@ -2,8 +2,8 @@ import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {DungeonCollection} from './dungeon_collection.js';
 import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
-import {PVS} from './dugn.js';
-import {DsaCell} from './dsa.js'
+import {PVS, Cell} from './dugn.js';
+import {Dsa, DsaCell} from './dsa.js'
 import createLib, {LibModule} from './lib.js';
 import {Matrix4} from "three";
 
@@ -104,7 +104,6 @@ class DungeonViewer {
         if (!this.model) {
             return;
         }
-        const cell = this.model.dgn.cellAt(x, y, z);
         this.scene!.add(this.selectionMarker);
         this.selectionMarker.position.set(x * 2, y * 2, z * -2);
         this.dirty = true;
@@ -123,43 +122,56 @@ class DungeonViewer {
         // to east, Y increases from down to up, Z increases from south to north.
         $('#dungeon-coords').innerText = `(${x}, ${y}, ${z})`;
 
-        for (let i = 0; i < 35; i++) {
-            $('#cell-attr' + i).innerText = cell.getAttr(i) + '';
-        }
         $('#cellinfo').hidden = false;
 
-        if (cell instanceof DsaCell) {
-            $('#cell-pascha2-walked').innerText = cell.walked + '';
+        if (this.model.dgn instanceof Dsa) {
+            const cell = this.model.dgn.cellAt(x, y, z);
+            for (let i = 0; i < DsaCell.attributes.length; i++) {
+                $('#cell-attr' + i).innerText = cell[DsaCell.attributes[i]] + '';
+            }
+            for (const attr of DsaCell.pascha2Attributes) {
+                $('#cell-pascha2-' + attr).innerText = cell[attr] + '';
+            }
             $('#cellinfo-pascha2').hidden = false;
         } else {
-            if (cell.version != 8) {
-                $('#cell-unknown1').innerText = cell.unknown1 + '';
-                $('#cell-buttlebg').innerText = cell.buttle_background + '';
+            const cell = this.model.dgn.cellAt(x, y, z);
+            for (let i = 0; i < Cell.commonAttributes.length; i++) {
+                $('#cell-attr' + i).innerText = cell[Cell.commonAttributes[i]] + '';
             }
+            if (this.model.dgn.isField) {
+                for (const attr of Cell.pascha2Attributes) {
+                    $('#cell-pascha2-' + attr).innerText = cell[attr] + '';
+                }
+                $('#cellinfo-pascha2').hidden = false;
+            } else {
+                const cell = this.model.dgn.cellAt(x, y, z);
+                $('#cell-unknown3').innerText = cell.unknown3 + '';
+                $('#cell-battlebg').innerText = cell.battle_background + '';
 
-            if (cell.version != 13) {
-                for (let i = 0; i < 6; i++) {
-                    $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
-                    $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';
+                if (cell.version == 10) {
+                    for (let i = 0; i < 6; i++) {
+                        $('#cell-rance6-num' + (i + 1)).innerText = cell.pairs[i].n + '';
+                        $('#cell-rance6-str' + (i + 1)).innerText = '"' + sjisDecoder.decode(cell.pairs[i].s) + '"';
+                    }
+                    $('#cellinfo-rance6').hidden = false;
+                } else {
+                    $('#cell-galzoo178').innerText = cell.polyobj_index + '';
+                    if (cell.polyobj_index >= 0) {
+                        const name = this.polyModelFactory!.polyobj.objects[cell.polyobj_index].name;
+                        $('#cell-galzoo178').innerText += ' (' + sjisDecoder.decode(name) + ')';
+                    }
+                    $('#cell-galzoo182').innerText = cell.polyobj_mag.toFixed(3);
+                    $('#cell-galzoo186').innerText = cell.polyobj_rotate_h.toFixed(3);
+                    $('#cell-galzoo190').innerText = cell.polyobj_rotate_p.toFixed(3);
+                    $('#cell-galzoo194').innerText = cell.polyobj_rotate_b.toFixed(3);
+                    $('#cell-galzoo198').innerText = cell.polyobj_offset_x.toFixed(3);
+                    $('#cell-galzoo202').innerText = cell.polyobj_offset_y.toFixed(3);
+                    $('#cell-galzoo206').innerText = cell.polyobj_offset_z.toFixed(3);
+                    $('#cell-galzoo210').innerText = cell.roof_orientation + '';
+                    $('#cell-galzoo214').innerText = cell.roof_texture + '';
+                    $('#cell-galzoo222').innerText = cell.roof_underside_texture + '';
+                    $('#cellinfo-galzoo').hidden = false;
                 }
-                $('#cellinfo-rance6').hidden = false;
-            } else if (cell.version == 13) {
-                $('#cell-galzoo178').innerText = cell.polyobj_index + '';
-                if (cell.polyobj_index >= 0) {
-                    const name = this.polyModelFactory!.polyobj.objects[cell.polyobj_index].name;
-                    $('#cell-galzoo178').innerText += ' (' + sjisDecoder.decode(name) + ')';
-                }
-                $('#cell-galzoo182').innerText = cell.polyobj_scale.toFixed(3);
-                $('#cell-galzoo186').innerText = cell.polyobj_rotationY.toFixed(3);
-                $('#cell-galzoo190').innerText = cell.polyobj_rotationZ.toFixed(3);
-                $('#cell-galzoo194').innerText = cell.polyobj_rotationX.toFixed(3);
-                $('#cell-galzoo198').innerText = cell.polyobj_positionX.toFixed(3);
-                $('#cell-galzoo202').innerText = cell.polyobj_positionY.toFixed(3);
-                $('#cell-galzoo206').innerText = cell.polyobj_positionZ.toFixed(3);
-                $('#cell-galzoo210').innerText = cell.roof_orientation + '';
-                $('#cell-galzoo214').innerText = cell.roof_texture + '';
-                $('#cell-galzoo222').innerText = cell.roof_underside_texture + '';
-                $('#cellinfo-galzoo').hidden = false;
             }
         }
     }

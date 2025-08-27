@@ -20,12 +20,11 @@ struct dlf_header {
 */
 
 export class DungeonCollection {
-    private dgn: Blob[] = [];
+    private dgn: (Blob | File)[] = [];
     private dtx: Blob[] = [];
     private tes: Blob[] = [];
     private dsa: Blob[] = [];
     private polyobj: Blob | null = null;
-    private fromDlf = false;
 
     async addFile(file: File) {
         if (file.name.toLowerCase() === 'dungeondata.dlf') {
@@ -50,7 +49,6 @@ export class DungeonCollection {
                 if (tesOffset)
                     this.tes[i] = file.slice(tesOffset, tesOffset + tesLength);
             }
-            this.fromDlf = true;
             return;
         }
         const match = /^(field|map|\d+p2dgn)(\d+)\.(dgn|dtx|mrk|tes|dsa)$/.exec(file.name.toLowerCase());
@@ -94,7 +92,8 @@ export class DungeonCollection {
         if (this.dsa[i]) {
             return new Dsa(await readFileAsArrayBuffer(this.dsa[i]));
         }
-        return new Dugn(await readFileAsArrayBuffer(this.dgn[i]), this.fromDlf);
+        const isField = (this.dgn[i] instanceof File) && this.dgn[i].name.toLowerCase().startsWith('field');
+        return new Dugn(await readFileAsArrayBuffer(this.dgn[i]), isField);
     }
 
     async getDtex(i: number): Promise<Dtex> {
