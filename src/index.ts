@@ -64,6 +64,8 @@ class DungeonViewer {
         this.model.onTextureLoad = () => { this.dirty = true };
         this.scene = new THREE.Scene();
         this.scene.add(this.model);
+        this.scene.background = new THREE.Color().setRGB(
+            dgn.backColorR / 255, dgn.backColorG / 255, dgn.backColorB / 255);
         if (($('#show-pvs-check') as HTMLInputElement).checked)
             this.scene.add(this.visibilityMarker);
 

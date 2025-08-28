@@ -305,6 +305,9 @@ export class Dsa {
     get sizeX(): number { return this.dsd['xyzMapSize']['x']; }
     get sizeY(): number { return this.dsd['xyzMapSize']['y']; }
     get sizeZ(): number { return this.dsd['xyzMapSize']['z']; }
+    get backColorR(): number { return 0; }
+    get backColorG(): number { return 0; }
+    get backColorB(): number { return 0; }
 
     cellAt(x: number, y: number, z: number): DsaCell {
         if (x < 0 || x >= this.sizeX || y < 0 || y >= this.sizeY || z < 0 || z >= this.sizeZ) {
