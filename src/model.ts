@@ -62,6 +62,7 @@ export class CellModel extends THREE.Group {
             if (dgn.isField) {
                 // Make it a billboard.
                 plane.position.set(wx, wy, wz);
+                plane.scale.set(1.7, 1.7, 1.7);
                 plane.onBeforeRender = (_renderer, _scene, camera) => {
                     plane.quaternion.copy(camera.quaternion);
                 };
