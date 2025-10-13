@@ -51,7 +51,7 @@ export class DungeonCollection {
             }
             return;
         }
-        const match = /^(field|map|\d+p2dgn)(\d+)\.(dgn|dtx|mrk|tes|dsa)$/.exec(file.name.toLowerCase());
+        const match = /^(field|map|\d*p2dgn)(\d+)\.(dgn|dtx|mrk|tes|dsd|dsa)$/.exec(file.name.toLowerCase());
         if (match) {
             // GALZOO Island
             const i = Number(match[2]);
@@ -65,6 +65,7 @@ export class DungeonCollection {
             case 'tes':
                 this.tes[i] = file;
                 break;
+            case 'dsd':
             case 'dsa':
                 this.dsa[i] = file;
                 break;
