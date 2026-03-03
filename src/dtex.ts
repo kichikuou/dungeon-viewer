@@ -50,7 +50,13 @@ export class Dtex {
         }
     }
 
-    get(type: TextureType, col: number): Uint8Array<ArrayBuffer> | undefined {
+    get(type: TextureType | number, col: number): Uint8Array<ArrayBuffer> | undefined {
+        if (typeof type === 'number') {
+            if (type < 0 || type >= this.nr_rows) {
+                throw new Error('invalid texture type');
+            }
+            return this.data[type][col];
+        }
         switch (type) {
         case 'wall':
             return this.data[0][col];
