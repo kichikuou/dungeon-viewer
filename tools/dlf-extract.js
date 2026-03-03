@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import arg from 'arg';
 import fs from 'fs';
 import path from 'path';
@@ -13,7 +13,7 @@ const args = arg({
 });
 
 if (args['--help'] || args._.length !== 1) {
-    console.log('usage: bun dlf-extract.js [options] DungeonData.dlf');
+    console.log('usage: node dlf-extract.js [options] DungeonData.dlf');
     console.log('    Extract a dlf archive');
     console.log('Options:');
     console.log('    -h, --help          Print this message and exit');

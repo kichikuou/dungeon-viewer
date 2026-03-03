@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import {BufferReader} from './buffer.js';
-import {Dtex, TextureType} from './dtex.js';
-import {Dugn, Cell} from './dugn.js';
-import {Dsa, DsaCell} from './dsa.js';
-import {PolyObj} from './polyobj.js';
-import {LibModule} from './lib.js';
+import { BufferReader } from './buffer.ts';
+import { Dtex, TextureType } from './dtex.ts';
+import { Dugn, Cell } from './dugn.ts';
+import { Dsa, DsaCell } from './dsa.ts';
+import { PolyObj } from './polyobj.ts';
+import { LibModule } from './lib.ts';
 
 type Image = {texture: THREE.DataTexture, hasAlpha: boolean};
 

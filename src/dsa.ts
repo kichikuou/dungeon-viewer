@@ -1,4 +1,4 @@
-import {BufferReader} from './buffer.js';
+import { BufferReader } from './buffer.ts';
 
 const AIN_INT = 10;
 const AIN_FLOAT = 11;

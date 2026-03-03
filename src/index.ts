@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
-import {DungeonCollection} from './dungeon_collection.js';
-import {DungeonModel, CellModel, PolyObjModelFactory} from './model.js';
-import {PVS, Cell} from './dugn.js';
-import {Dsa, DsaCell} from './dsa.js'
-import createLib, {LibModule} from './lib.js';
-import {Matrix4} from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { DungeonCollection } from './dungeon_collection.ts';
+import { DungeonModel, CellModel, PolyObjModelFactory } from './model.ts';
+import { PVS, Cell } from './dugn.ts';
+import { Dsa, DsaCell } from './dsa.ts';
+import createLib, { LibModule } from './lib.ts';
+import { Matrix4 } from "three";
 
 export const $: (selector: string) => HTMLElement = document.querySelector.bind(document);
 const sjisDecoder = new TextDecoder('shift-jis');

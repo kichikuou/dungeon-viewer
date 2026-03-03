@@ -1,8 +1,8 @@
-import {Dtex} from './dtex.js';
-import {Dugn} from './dugn.js';
-import {Dsa} from './dsa.js';
-import {PolyObj} from './polyobj.js';
-import {BufferReader, readFileAsArrayBuffer} from './buffer.js';
+import { Dtex } from './dtex.ts';
+import { Dugn } from './dugn.ts';
+import { Dsa } from './dsa.ts';
+import { PolyObj } from './polyobj.ts';
+import { BufferReader, readFileAsArrayBuffer } from './buffer.ts';
 
 /*
 struct dlf_header {

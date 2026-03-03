@@ -1,4 +1,4 @@
-import {BufferReader} from './buffer.js';
+import { BufferReader } from './buffer.ts';
 
 /*
 struct dugn {
