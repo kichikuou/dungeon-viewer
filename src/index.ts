@@ -11,6 +11,7 @@ export const $: (selector: string) => HTMLElement = document.querySelector.bind(
 const sjisDecoder = new TextDecoder('shift-jis');
 
 class DungeonViewer {
+    private lib: LibModule;
     private polyModelFactory: PolyObjModelFactory | null = null;
     private renderer = new THREE.WebGLRenderer();
     private camera = new THREE.PerspectiveCamera(50, 800 / 600, 1, 200);
@@ -22,7 +23,8 @@ class DungeonViewer {
     private visibilityMarker = new VisibilityMarker();
     private dirty = false;
 
-    constructor(private lib: LibModule) {
+    constructor(lib: LibModule) {
+        this.lib = lib;
         this.renderer.setSize(800, 600);
         $('#viewer').appendChild(this.renderer.domElement);
         setClickHandler(this.renderer.domElement, this.onCanvasClick.bind(this));

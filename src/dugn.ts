@@ -255,6 +255,7 @@ export class Cell {
         'polyobj_offset_z',
     ] as const;
 
+    readonly version: number
     readonly pairs: {n: number, s: Uint8Array}[] = [];
     readonly offsetAfterPairs: number;
     readonly floor_texture: number;
@@ -325,7 +326,8 @@ export class Cell {
     readonly door_angle_east: number | undefined;
     readonly walked: number | undefined;
 
-    constructor(readonly version: number, isField: boolean, r: BufferReader) {
+    constructor(version: number, isField: boolean, r: BufferReader) {
+        this.version = version;
         const offset = r.offset;
         this.floor_texture = r.readS32();
         this.ceiling_texture = r.readS32();
@@ -416,9 +418,11 @@ export class Cell {
 }
 
 export class PVS {
+    private dgn: Dugn;
     private runLengths: [number, number][] = [];
 
-    constructor(private dgn: Dugn, r: BufferReader) {
+    constructor(dgn: Dugn, r: BufferReader) {
+        this.dgn = dgn;
         const len = r.readU32();
         if (len % 8 !== 4)
             throw new Error('unexpected PVS length');

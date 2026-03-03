@@ -16,6 +16,7 @@ const planeGeometry = createPlaneGeometry();
 const stairsGeometry = createStairsGeometry();
 
 export class DungeonModel extends THREE.Group {
+    readonly dgn: Dugn | Dsa;
     private materials: MaterialCache;
     public sizeX: number;
     public sizeY: number;
@@ -24,8 +25,9 @@ export class DungeonModel extends THREE.Group {
         this.materials.onTextureLoad = handler;
     }
 
-    constructor(readonly dgn: Dugn | Dsa, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
+    constructor(dgn: Dugn | Dsa, dtx: Dtex, polyFactory: PolyObjModelFactory | null, lib: LibModule) {
         super();
+        this.dgn = dgn;
         this.sizeX = dgn.sizeX;
         this.sizeY = dgn.sizeY;
         this.sizeZ = dgn.sizeZ;
@@ -46,9 +48,15 @@ export class DungeonModel extends THREE.Group {
 
 export class CellModel extends THREE.Group {
     cell: Cell | DsaCell;
+    x: number;
+    y: number;
+    z: number;
 
-    constructor(dgn: Dugn | Dsa, public x: number, public y: number, public z: number, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
+    constructor(dgn: Dugn | Dsa, x: number, y: number, z: number, materials: MaterialCache, polyFactory: PolyObjModelFactory | null) {
         super();
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
         const cell = this.cell = dgn.cellAt(x, y, z);
         const [wx, wy, wz] = [x * 2, y * 2, -z * 2];
@@ -173,12 +181,16 @@ class ResourceManager {
 }
 
 class MaterialCache extends ResourceManager {
+    private dtx: Dtex;
+    private lib: LibModule;
     private materials = new Map<string, THREE.MeshBasicMaterial>();
     private textures = new Map<string, Promise<Image>>();
     public onTextureLoad: (() => void) | null = null;
 
-    constructor(private dtx: Dtex, private lib: LibModule) {
+    constructor(dtx: Dtex, lib: LibModule) {
         super();
+        this.dtx = dtx;
+        this.lib = lib;
     }
 
     private getTexture(type: TextureType, index: number): Promise<Image> | null {
@@ -244,11 +256,15 @@ class MaterialCache extends ResourceManager {
 }
 
 export class PolyObjModelFactory extends ResourceManager {
+    readonly polyobj: PolyObj;
+    private lib: LibModule;
     private models: THREE.Group[] = [];
     private materials: THREE.MeshBasicMaterial[] = [];
 
-    constructor(readonly polyobj: PolyObj, private lib: LibModule) {
+    constructor(polyobj: PolyObj, lib: LibModule) {
         super();
+        this.polyobj = polyobj;
+        this.lib = lib;
     }
 
     createModel(index: number): THREE.Object3D {
